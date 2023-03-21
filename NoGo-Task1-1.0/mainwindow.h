@@ -2,9 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-
+#include <QMessageBox>
 #include "GameModel.h"
-
+#include <QAbstractButton>
 #include "QPainter"
 #include "QMouseEvent"
 #include <QTimer>
@@ -21,7 +21,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
+    void buttonClicked(QAbstractButton *butClicked);
 private:
     Ui::MainWindow *ui;
 
@@ -35,6 +35,7 @@ private:
 
     int clickPosRow,clickPosCol; // 存储即将点击的位置
     bool selectPos = false; // 是否移动到合适的位置，以选中某个交叉点
+
 
     // 绘制
     void paintEvent(QPaintEvent * event);

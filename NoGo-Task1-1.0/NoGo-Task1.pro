@@ -12,7 +12,8 @@ SOURCES += \
     GameModel.cpp \
     countwidget.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    nogo_ai.cpp
 
 HEADERS += \
     GameModel.h \

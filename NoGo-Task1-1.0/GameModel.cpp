@@ -22,7 +22,7 @@ void GameModel::startGame(GameType type)
             rank[i][j] = 1;
         }
     }
-
+/*
     // 如果是AI模式，还需要初始化评分数组
     if(type == AI)
     {
@@ -34,7 +34,7 @@ void GameModel::startGame(GameType type)
                 lineScores.push_back(0);
             scoreMapVec.push_back(lineScores);
         }
-    }
+    }*/
 
     //轮到黑方下棋为 true，白方为 false
     playerFlag = true;
