@@ -10,13 +10,11 @@ CONFIG += c++17
 
 SOURCES += \
     GameModel.cpp \
-    countwidget.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     GameModel.h \
-    countwidget.h \
     mainwindow.h
 
 FORMS += \

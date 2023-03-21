@@ -2,16 +2,18 @@
 #define COUNTWIDGET_H
 
 #include <QWidget>
-#include <mainwindow.h>
+#include <QTimer>
+#include <QLabel>
 
 class CountWidget : public QWidget
 {
 public:
     CountWidget(QWidget *parent = nullptr) : QWidget(parent) {};
     QLabel *countlabel;
-private:
     QTimer *timer;
     int count;
+    // 设置布局
+
     void timer_init();
     void timelimit_exceeded();
     void timer_update();
