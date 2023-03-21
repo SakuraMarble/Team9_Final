@@ -17,7 +17,8 @@ SOURCES += \
 HEADERS += \
     GameModel.h \
     countwidget.h \
-    mainwindow.h
+    mainwindow.h \
+    nogo_ai.h
 
 FORMS += \
     mainwindow.ui
