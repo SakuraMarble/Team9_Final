@@ -4,16 +4,18 @@
 #include <QApplication>
 QPushButton *agreeBut;
 QPushButton *disagreeBut;
-MainWindow w;
+MainWindow *MW;
 void MainWindow::buttonClicked(QAbstractButton *butClicked){
     if(butClicked == (QAbstractButton*)agreeBut){
-        w.game->gameType=AI;
+        MW->game->gameType=AI;
     }
 }
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    MainWindow w;MW=&w;
     w.show();
+
     //创建消息框
     QMessageBox MyBox(QMessageBox::Question,"","");
     MyBox.setParent(&w);

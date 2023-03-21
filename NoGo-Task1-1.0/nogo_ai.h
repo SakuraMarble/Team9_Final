@@ -18,8 +18,8 @@ typedef vector< vect > brd;
 //#define size BOARD_GRAD_SIZE
 #define pii pair<int,int>
 class ai{
-    int ai_fa[100];//并查集
-    int air[100];
+    int ai_fa[10000];//并查集
+    int air[10000];
     int findai_fa(int i);
     void ai_merge(int sour,int dest);
     bool ai_check(brd board,int size);

@@ -243,7 +243,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
 
     // 由人来下棋
     chessOneByPerson();
-
+    update();
     if (game_type == AI) { //人机模式
         ai newai;
         pii ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);
