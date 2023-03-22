@@ -267,7 +267,7 @@ void MainWindow::chessOneByPerson()
         }
         // 重新绘制
         update();
-        //timer_update();
+        timer_update();
     }
 }
 
