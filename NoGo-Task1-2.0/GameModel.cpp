@@ -1,6 +1,6 @@
 #include "GameModel.h"
 #define point_index(row,col) (100 * row + col)
-
+#include "nogo_ai.h"
 void GameModel::startGame(GameType type)
 {
     gameType = type; // 前面的gameType是GameModel类中的成员变量
@@ -59,12 +59,14 @@ void GameModel::updateGameMap(int row, int col)
 
 bool GameModel::isLose(int row, int col)
 {
-    if (eat(row,col,gameMapVec[row][col]))
+    ai newai;
+    return !newai.ai_check(gameMapVec,BOARD_GRAD_SIZE);
+    /*if (eat(row,col,gameMapVec[row][col]))
         return true; //吃对方判负
     int group = merge_group(row,col);
     if (!if_air(group,gameMapVec[row][col]))
         return true; //紫砂判负
-    return false;
+    return false;*/
 }
 
 bool GameModel::if_out(int row,int col)
