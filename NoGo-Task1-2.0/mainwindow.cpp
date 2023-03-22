@@ -85,16 +85,42 @@ void MainWindow::initGame()
 {
     // 初始化游戏模型
     game = new GameModel;
+    //NoGoAI = new ai;
+
+    QMessageBox MyBox(QMessageBox::Question,"","");
+    MyBox.setParent(this);
+    MyBox.setWindowFlag(Qt::Dialog);
+    MyBox.setWindowTitle("AI");
+    MyBox.setText("是否与AI对打");
+    //自定义两个按钮
+    agreeBut = MyBox.addButton("同意",QMessageBox::AcceptRole);
+    disagreeBut = MyBox.addButton("拒绝",QMessageBox::RejectRole);
+    QObject::connect(&MyBox,&QMessageBox::buttonClicked,this,&MainWindow::buttonClicked);
+
+    MyBox.exec();
     timer_init();
-    initAIGame();
 }
 
-void MainWindow::initAIGame()
+void MainWindow::reGame()
 {
-    game_type = AI;
-    game->gameStatus = PLAYING;
+    QMessageBox MyBox(QMessageBox::Question,"","");
+    MyBox.setParent(this);
+    MyBox.setWindowFlag(Qt::Dialog);
+    MyBox.setWindowTitle("AI");
+    MyBox.setText("是否与AI对打");
+    //自定义两个按钮
+    agreeBut = MyBox.addButton("同意",QMessageBox::AcceptRole);
+    disagreeBut = MyBox.addButton("拒绝",QMessageBox::RejectRole);
+    QObject::connect(&MyBox,&QMessageBox::buttonClicked,this,&MainWindow::buttonClicked);
 
-    game->startGame(game_type);
+    MyBox.exec();
+    timer_update();
+}
+
+void MainWindow::initGameMode(GameType type)
+{
+    game->gameStatus = PLAYING;
+    game->startGame(type);
     update();
 }
 
@@ -219,6 +245,7 @@ void MainWindow::chessOneByPerson()
         {
             //qDebug() << "胜利"；
             game->gameStatus = DEAD;
+            timer->stop();
             //QSound::play(":sound/win.wav");
             QString str;
             if (game->gameMapVec[clickPosRow][clickPosCol] == 1)
@@ -229,14 +256,18 @@ void MainWindow::chessOneByPerson()
             QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
             if (btnValue == QMessageBox::Ok)
             {
+                /***
                 game->startGame(game_type);
                 game->gameStatus = PLAYING;
+                timer_update();
+                ***/
+                reGame();
             }
-            timer_update();
+
         }
         // 重新绘制
         update();
-        timer_update();
+        //timer_update();
     }
 }
 
@@ -253,9 +284,12 @@ void MainWindow::on_pushButton_clicked()
     QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
     if (btnValue == QMessageBox::Ok)
     {
+        /***
         game->startGame(game_type);
         game->gameStatus = PLAYING;
         timer_update();
+        ***/
+        reGame();
     }
 }
 
@@ -303,6 +337,7 @@ void MainWindow::timer_update()
 void MainWindow::timelimit_exceeded()
 {
     game->gameStatus = DEAD;
+    timer->stop();
     QString str;
     if (game->playerFlag)
         str = "The white"; //黑色TL白色赢！
@@ -312,12 +347,25 @@ void MainWindow::timelimit_exceeded()
     QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", "You have exceeded the time limit," + str + " wins！");
     if (btnValue == QMessageBox::Ok)
     {
+        /***
         game->startGame(game_type);
         game->gameStatus = PLAYING;
+        timer_update();
+        ***/
+        reGame();
     }
-    timer_update();
 }
 
+void MainWindow::buttonClicked(QAbstractButton *butClicked){
+    if(butClicked == (QAbstractButton*)agreeBut) {
+        game_type = AI;
+        initGameMode(AI);
+    }
+    else {
+        game_type = MAN;
+        initGameMode(MAN);
+    }
+}
 
 
 

@@ -23,7 +23,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void timer_init();
-    void buttonClicked(QAbstractButton *butClicked);
+
 private:
     Ui::MainWindow *ui;
 
@@ -31,6 +31,9 @@ private:
     QLabel *countlabel;
     //QVBoxLayout *layout;
     //QWidget *centralWidget;
+    QPushButton *agreeBut;
+    QPushButton *disagreeBut;
+
     GameModel *game; // 游戏指针
     GameType game_type; // 存储游戏类型
 
@@ -44,7 +47,8 @@ private:
     void paintEvent(QPaintEvent * event);
 
     void initGame();
-    void initAIGame();
+    void initGameMode(GameType type);
+    void reGame();
 
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
@@ -57,6 +61,7 @@ private:
 private slots:
     void on_pushButton_clicked();
     void TimerCount();
+    void buttonClicked(QAbstractButton *butClicked);
 };
 
 
