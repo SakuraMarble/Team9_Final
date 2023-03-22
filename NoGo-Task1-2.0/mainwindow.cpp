@@ -4,7 +4,6 @@
 #include <math.h>
 #include <QMessageBox>
 
-#include "nogo_ai.h"
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -86,7 +85,7 @@ void MainWindow::initGame()
     // 初始化游戏模型
     game = new GameModel;
     //NoGoAI = new ai;
-
+    //创建消息框
     QMessageBox MyBox(QMessageBox::Question,"","");
     MyBox.setParent(this);
     MyBox.setWindowFlag(Qt::Dialog);
@@ -103,6 +102,7 @@ void MainWindow::initGame()
 
 void MainWindow::reGame()
 {
+    //创建消息框
     QMessageBox MyBox(QMessageBox::Question,"","");
     MyBox.setParent(this);
     MyBox.setWindowFlag(Qt::Dialog);
@@ -194,7 +194,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
                 selectPos = true;
         }
 
-        // 判断输赢
+        // 判断输赢,请移步mouseReleaseEvent
         if (clickPosRow > 0 && clickPosRow < BOARD_GRAD_SIZE &&
             clickPosCol > 0 && clickPosCol < BOARD_GRAD_SIZE &&
             (game->gameMapVec[clickPosRow][clickPosCol] == 1 ||
@@ -221,19 +221,20 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
 
     // 由人持黑子先来下棋
     chessOneByPerson();
+    update();
     paintEvent(NULL);
-    if (man_lose) {
-        man_lose = false;
+    if (lose) {
+        lose = false;//下一局的flag设置
         return;//玩家战败，AI无需再下棋
     }
     if (game_type == AI) { //人机模式
         ai newai;
-        pii ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);
+        pii ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
         clickPosRow=ret.first; clickPosCol=ret.second;
 
-        chessOneByPerson();
-
+        chessOneByPerson();//其实是ByAI
     }
+    lose = false;//下一局的flag设置
 }
 
 void MainWindow::chessOneByPerson()
@@ -249,38 +250,28 @@ void MainWindow::chessOneByPerson()
         {
             //qDebug() << "胜利"；
             game->gameStatus = DEAD;
-            timer->stop();
+            timer->stop();//停止计时
             //QSound::play(":sound/win.wav");
             QString str;
-            if (game->gameMapVec[clickPosRow][clickPosCol] == 1) {
+            if (game->gameMapVec[clickPosRow][clickPosCol] == 1)
                 str = "The white";//默认白色方是AI，玩家战败
-                man_lose = true;//用于对局return
-            }
             else if (game->gameMapVec[clickPosRow][clickPosCol] == 0)
                 str = "The black";
-
+            lose = true;//用于对局return
             QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
             if (btnValue == QMessageBox::Ok)
-            {
-                /***
-                game->startGame(game_type);
-                game->gameStatus = PLAYING;
-                timer_update();
-                ***/
                 reGame();
-            }
-
         }
         // 重新绘制
         update();
-        timer_update();
+        timer_update();//重新倒计时
     }
 }
 
 void MainWindow::on_pushButton_clicked()
 {
     game->gameStatus = DEAD;
-    timer->stop();
+    timer->stop();//停止计时
     QString str;
     if (game->playerFlag)
         str = "The white"; //黑色认输白色赢！
@@ -289,14 +280,7 @@ void MainWindow::on_pushButton_clicked()
 
     QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
     if (btnValue == QMessageBox::Ok)
-    {
-        /***
-        game->startGame(game_type);
-        game->gameStatus = PLAYING;
-        timer_update();
-        ***/
         reGame();
-    }
 }
 
 void MainWindow::timer_init()
@@ -352,14 +336,7 @@ void MainWindow::timelimit_exceeded()
 
     QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", "You have exceeded the time limit," + str + " wins！");
     if (btnValue == QMessageBox::Ok)
-    {
-        /***
-        game->startGame(game_type);
-        game->gameStatus = PLAYING;
-        timer_update();
-        ***/
         reGame();
-    }
 }
 
 void MainWindow::buttonClicked(QAbstractButton *butClicked){//选择是否为对阵AI模式

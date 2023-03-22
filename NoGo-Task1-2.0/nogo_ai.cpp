@@ -10,7 +10,7 @@ void ai::ai_merge(int sour,int dest){
         //并查集
         ai_fa[findai_fa(sour)]=findai_fa(dest);
     }
-bool ai::ai_check(brd board,int size){
+bool ai::ai_check(brd &board,int size){
         //检测当前棋盘状态
         for(int i=1;i<10000;i++){ai_fa[i]=i;air[i]=0;}
         for(int i=1;i<size;i++)
@@ -37,7 +37,7 @@ bool ai::ai_check(brd board,int size){
                 }
         return true;
     }
-int ai::ai_calc(brd board,int use,int size){
+int ai::ai_calc(brd &board,int use,int size){
     //玩家use已落子，判断这个子对他的作用
         int val=0;
         int enemy=1-use;
@@ -60,7 +60,7 @@ int ai::ai_calc(brd board,int use,int size){
             }
         return val;
     }
-pii ai::run(brd board,int use,int size){
+pii ai::run(brd &board,int use,int size){
     //程序的接口
         const int enemy=1-use;
         int worth[size][size];
