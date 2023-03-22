@@ -174,25 +174,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
             (game->gameMapVec[clickPosRow][clickPosCol] == 1 ||
              game->gameMapVec[clickPosRow][clickPosCol] == 0))
         {
-            if (game->isLose(clickPosRow, clickPosCol) && game->gameStatus == PLAYING)
-            {
-                //qDebug() << "胜利"；
-                game->gameStatus = DEAD;
-                //QSound::play(":sound/win.wav");
-                QString str;
-                if (game->gameMapVec[clickPosRow][clickPosCol] == 1)
-                    str = "The white";
-                else if (game->gameMapVec[clickPosRow][clickPosCol] == 0)
-                    str = "The black"; //对方胜利
 
-                QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
-                if (btnValue == QMessageBox::Ok)
-                {
-                    game->startGame(game_type);
-                    game->gameStatus = PLAYING;
-                }
-                timer_update();
-            }
         }
 
 
@@ -233,7 +215,25 @@ void MainWindow::chessOneByPerson()
         // 在游戏的数据模型中落子
         game->actionByPerson(clickPosRow, clickPosCol);
         // 播放落子音效，待实现；
+        if (game->isLose(clickPosRow, clickPosCol) && game->gameStatus == PLAYING)
+        {
+            //qDebug() << "胜利"；
+            game->gameStatus = DEAD;
+            //QSound::play(":sound/win.wav");
+            QString str;
+            if (game->gameMapVec[clickPosRow][clickPosCol] == 1)
+                str = "The white";
+            else if (game->gameMapVec[clickPosRow][clickPosCol] == 0)
+                str = "The black"; //对方胜利
 
+            QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
+            if (btnValue == QMessageBox::Ok)
+            {
+                game->startGame(game_type);
+                game->gameStatus = PLAYING;
+            }
+            timer_update();
+        }
         // 重新绘制
         update();
         timer_update();
