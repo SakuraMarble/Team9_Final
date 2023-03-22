@@ -127,7 +127,7 @@ bool GameModel::if_air(int group,int player)
 {
     int i,j,k,new_i,new_j;
     for (i = 1;i < BOARD_GRAD_SIZE;i++) {
-        for (j = 1;j < BOARD_GRAD_SIZE;j++) {
+        for (j = 1;j < BOARD_GRAD_SIZE;j++) {//从1开始 边界没有air
             if (gameMapVec[i][j] == -1) { //扫描每一个空格
                 for (k = 0;k < 4;k++) {
                     new_i = i + direction[k][0];
