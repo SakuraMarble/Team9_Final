@@ -14,7 +14,8 @@ bool ai::ai_check(brd board,int size){
         //检测当前棋盘状态
         for(int i=1;i<10000;i++){ai_fa[i]=i;air[i]=0;}
         for(int i=1;i<size;i++)
-            for(int j=1;j<size;j++){
+            for(int j=1;j<size;j++)
+                if(board[i][j]!=ai_empty){
                 if(i>0&&board[i][j]==board[i-1][j])
                     ai_merge(i*size+j,i*size-size+j);
                 if(j>0&&board[i][j]==board[i][j-1])
