@@ -42,6 +42,7 @@ private:
 
     int clickPosRow,clickPosCol; // 存储即将点击的位置
     bool selectPos = false; // 是否移动到合适的位置，以选中某个交叉点
+    bool man_lose = false;//解决AI重开先后手问题
 
     // 绘制
     void paintEvent(QPaintEvent * event);

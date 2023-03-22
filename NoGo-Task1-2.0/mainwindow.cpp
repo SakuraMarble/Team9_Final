@@ -219,9 +219,13 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
         selectPos = false;
     }
 
-    // 由人来下棋
+    // 由人持黑子先来下棋
     chessOneByPerson();
     paintEvent(NULL);
+    if (man_lose) {
+        man_lose = false;
+        return;//玩家战败，AI无需再下棋
+    }
     if (game_type == AI) { //人机模式
         ai newai;
         pii ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);
@@ -248,10 +252,12 @@ void MainWindow::chessOneByPerson()
             timer->stop();
             //QSound::play(":sound/win.wav");
             QString str;
-            if (game->gameMapVec[clickPosRow][clickPosCol] == 1)
-                str = "The white";
+            if (game->gameMapVec[clickPosRow][clickPosCol] == 1) {
+                str = "The white";//默认白色方是AI，玩家战败
+                man_lose = true;//用于对局return
+            }
             else if (game->gameMapVec[clickPosRow][clickPosCol] == 0)
-                str = "The black"; //对方胜利
+                str = "The black";
 
             QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
             if (btnValue == QMessageBox::Ok)
@@ -304,11 +310,11 @@ void MainWindow::timer_init()
     //centralWidget = new QWidget;
     //centralWidget->setLayout(layout);
 
-    timer->setInterval(1000);
+    timer->setInterval(1000);//1s刷新一次
     TimerCountNumber = TimerLimit;
     //setCentralWidget(centralWidget);
 
-    connect(timer,&QTimer::timeout,this,&MainWindow::TimerCount);
+    connect(timer,&QTimer::timeout,this,&MainWindow::TimerCount);//关联刷新倒计时
     //if (timer->isActive())
     countlabel->setText(QString::number(TimerCountNumber));
     timer->start();
@@ -316,12 +322,12 @@ void MainWindow::timer_init()
 
 void MainWindow::TimerCount()
 {
-    TimerCountNumber--;
-    countlabel->setText(QString::number(TimerCountNumber));
+    TimerCountNumber--;//1s过去了
+    countlabel->setText(QString::number(TimerCountNumber));//刷新倒计时
     //setCentralWidget(centralWidget);
     if (!TimerCountNumber) {
         timer->stop();
-        timelimit_exceeded();
+        timelimit_exceeded();//超时
     }
 }
 
@@ -356,7 +362,7 @@ void MainWindow::timelimit_exceeded()
     }
 }
 
-void MainWindow::buttonClicked(QAbstractButton *butClicked){
+void MainWindow::buttonClicked(QAbstractButton *butClicked){//选择是否为对阵AI模式
     if(butClicked == (QAbstractButton*)agreeBut) {
         game_type = AI;
         initGameMode(AI);
