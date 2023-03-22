@@ -52,26 +52,26 @@ void GameModel::updateGameMap(int row, int col)
     else
         gameMapVec[row][col] = 0;
 
-    //merge_group(row,col);
+
     // 换手
     playerFlag = !playerFlag;
 }
 
 bool GameModel::isLose(int row, int col)
 {
-    ai newai;
-    return !newai.ai_check(gameMapVec,BOARD_GRAD_SIZE);
-    /*if (eat(row,col,gameMapVec[row][col]))
+    //ai newai;
+    //return !newai.ai_check(gameMapVec,BOARD_GRAD_SIZE);
+    if (eat(row,col,gameMapVec[row][col]))
         return true; //吃对方判负
     int group = merge_group(row,col);
     if (!if_air(group,gameMapVec[row][col]))
         return true; //紫砂判负
-    return false;*/
+    return false;
 }
 
 bool GameModel::if_out(int row,int col)
 {
-    return (row < 0 || row >= BOARD_GRAD_SIZE || col < 0 || col >= BOARD_GRAD_SIZE) ? true : false;
+    return (row <= 0 || row >= BOARD_GRAD_SIZE || col <= 0 || col >= BOARD_GRAD_SIZE) ? true : false;
 }
 
 int GameModel::merge_group(int row,int col)
@@ -126,8 +126,8 @@ bool GameModel::eat(int row,int col,int player)
 bool GameModel::if_air(int group,int player)
 {
     int i,j,k,new_i,new_j;
-    for (i = 0;i < BOARD_GRAD_SIZE;i++) {
-        for (j = 0;j < BOARD_GRAD_SIZE;j++) {
+    for (i = 1;i < BOARD_GRAD_SIZE;i++) {
+        for (j = 1;j < BOARD_GRAD_SIZE;j++) {
             if (gameMapVec[i][j] == -1) { //扫描每一个空格
                 for (k = 0;k < 4;k++) {
                     new_i = i + direction[k][0];

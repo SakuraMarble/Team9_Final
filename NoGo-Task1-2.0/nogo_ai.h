@@ -22,9 +22,9 @@ class ai{
     int air[10000];
     int findai_fa(int i);
     void ai_merge(int sour,int dest);
-    int ai_calc(brd board,int use,int size);
+    int ai_calc(brd &board,int use,int size);
 public:
-    bool ai_check(brd board,int size);
-    pii run(brd board,int use,int size);
+    bool ai_check(brd &board,int size);
+    pii run(brd &board,int use,int size);
 };
 #endif
