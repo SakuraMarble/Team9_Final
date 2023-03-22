@@ -3,7 +3,6 @@
 #include "nogo_ai.h"
 #include <math.h>
 #include <QMessageBox>
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -21,6 +20,14 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+    if (timer) {
+        if (timer->isActive())
+            timer->stop();
+        delete timer;
+        timer = nullptr;
+    }
+    delete label;
+    label = nullptr;
 }
 
 //实现paintEvent方法
@@ -44,7 +51,6 @@ void MainWindow::paintEvent(QPaintEvent * event)
     // 绘制选中点
     QBrush brush;
     brush.setStyle(Qt::SolidPattern);
-
     // 绘制落子标记（防止鼠标出框越界）
     if (clickPosRow > 0 && clickPosRow < BOARD_GRAD_SIZE &&
         clickPosCol > 0 && clickPosRow < BOARD_GRAD_SIZE &&
@@ -84,8 +90,33 @@ void MainWindow::initGame()
 {
     // 初始化游戏模型
     game = new GameModel;
-    timer_init();
+    timer = new QTimer;
+    label = new QLabel;
+    timer->setInterval(1000);
+    TimerLimit = 10;
+    TimerCountNumber = TimerLimit;
+    connect(timer,&QTimer::timeout,this,&MainWindow::TimerCount);
+    if (timer->isActive())
+        timer->start();
     initAIGame();
+}
+
+void MainWindow::TimerCount()
+{
+    TimerCountNumber--;
+    ui->label->setText(QString::number(TimerCountNumber));
+    if (!TimerCountNumber) {
+        timer->stop();
+        timelimit_exceeded();
+    }
+}
+
+void MainWindow::timer_update()
+{
+    TimerCountNumber = TimerLimit;
+    timer->stop();
+    if (timer->isActive())
+        timer->start();
 }
 
 void MainWindow::initAIGame()
@@ -239,7 +270,6 @@ void MainWindow::chessOneByPerson()
 void MainWindow::on_pushButton_clicked()
 {
     game->gameStatus = DEAD;
-    timer->stop();
     QString str;
     if (game->playerFlag)
         str = "The white"; //黑色认输白色赢！
@@ -251,49 +281,8 @@ void MainWindow::on_pushButton_clicked()
     {
         game->startGame(game_type);
         game->gameStatus = PLAYING;
-        timer_update();
     }
-}
-
-void MainWindow::timer_init()
-{
-    timer = new QTimer;
-    countlabel = ui->label;
-    countlabel->setAlignment(Qt::AlignHCenter);
-    //layout = new QVBoxLayout;
-    //layout->addWidget(countlabel);
-    //layout->addWidget(ui->pushButton);
-    //centralWidget = new QWidget;
-    //centralWidget->setLayout(layout);
-
-    timer->setInterval(1000);
-    TimerCountNumber = TimerLimit;
-    //setCentralWidget(centralWidget);
-
-    connect(timer,&QTimer::timeout,this,&MainWindow::TimerCount);
-    //if (timer->isActive())
-    countlabel->setText(QString::number(TimerCountNumber));
-    timer->start();
-}
-
-void MainWindow::TimerCount()
-{
-    TimerCountNumber--;
-    countlabel->setText(QString::number(TimerCountNumber));
-    //setCentralWidget(centralWidget);
-    if (!TimerCountNumber) {
-        timer->stop();
-        timelimit_exceeded();
-    }
-}
-
-void MainWindow::timer_update()
-{
-    timer->stop();
-    TimerCountNumber = TimerLimit;
-    //if (timer->isActive())
-    countlabel->setText(QString::number(TimerCountNumber));
-    timer->start();
+    timer_update();
 }
 
 void MainWindow::timelimit_exceeded()
@@ -305,7 +294,7 @@ void MainWindow::timelimit_exceeded()
     else
         str = "The black"; //白色TL黑色win！
 
-    QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", "You have exceeded the time limit," + str + " wins！");
+    QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
     if (btnValue == QMessageBox::Ok)
     {
         game->startGame(game_type);
@@ -313,6 +302,8 @@ void MainWindow::timelimit_exceeded()
     }
     timer_update();
 }
+
+
 
 
 
