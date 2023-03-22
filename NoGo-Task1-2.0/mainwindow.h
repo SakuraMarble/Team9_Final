@@ -5,6 +5,7 @@
 
 #include "GameModel.h"
 
+#include <QMessageBox>
 #include "QPainter"
 #include "QMouseEvent"
 #include <QTimer>
@@ -14,7 +15,6 @@
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -23,7 +23,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void timer_init();
-
+    void buttonClicked(QAbstractButton *butClicked);
 private:
     Ui::MainWindow *ui;
 

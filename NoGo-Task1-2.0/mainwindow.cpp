@@ -4,6 +4,7 @@
 #include <math.h>
 #include <QMessageBox>
 
+#include "nogo_ai.h"
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -212,9 +213,14 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
 
     // 由人来下棋
     chessOneByPerson();
-
+    paintEvent(NULL);
     if (game_type == AI) { //人机模式
-        // AI 下棋
+        ai newai;
+        pii ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);
+        clickPosRow=ret.first; clickPosCol=ret.second;
+
+        chessOneByPerson();
+
     }
 }
 

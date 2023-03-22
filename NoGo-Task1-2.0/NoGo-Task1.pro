@@ -11,11 +11,13 @@ CONFIG += c++17
 SOURCES += \
     GameModel.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    nogo_ai.cpp
 
 HEADERS += \
     GameModel.h \
-    mainwindow.h
+    mainwindow.h \
+    nogo_ai.h
 
 FORMS += \
     mainwindow.ui

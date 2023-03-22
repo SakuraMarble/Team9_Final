@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 
-#include <QMessageBox>
 #include <QApplication>
+#include <QMessageBox>
 QPushButton *agreeBut;
 QPushButton *disagreeBut;
 MainWindow *MW;

@@ -21,7 +21,7 @@ enum GameStatus
 };
 
 //棋盘尺寸
-const int BOARD_GRAD_SIZE = 15;
+const int BOARD_GRAD_SIZE = 10;
 
 const int MARGIN = 30; // 棋盘边缘空隙
 const int CHESS_RADIUS = 15; // 棋子半径

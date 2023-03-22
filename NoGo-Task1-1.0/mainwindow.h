@@ -9,7 +9,6 @@
 #include "QMouseEvent"
 #include <QTimer>
 #include <QLabel>
-#include <QVBoxLayout>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -22,22 +21,15 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-<<<<<<< HEAD
-    void timer_init();
-
-=======
     void buttonClicked(QAbstractButton *butClicked);
->>>>>>> 484e0405fa88a3102201ad655471fa4da7f358c4
 private:
     Ui::MainWindow *ui;
 
-    QTimer *timer;
-    QLabel *countlabel;
-    //QVBoxLayout *layout;
-    //QWidget *centralWidget;
     GameModel *game; // 游戏指针
     GameType game_type; // 存储游戏类型
 
+    QLabel *label;
+    QTimer *timer;
     int TimerCountNumber;
     int TimerLimit = 30;
 
@@ -63,6 +55,4 @@ private slots:
     void on_pushButton_clicked();
     void TimerCount();
 };
-
-
 #endif // MAINWINDOW_H
