@@ -221,8 +221,12 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
 
     // 由人持黑子先来下棋
     chessOneByPerson();
+<<<<<<< HEAD
     repaint();//立即调用paintEvent进行重绘
     //update();
+=======
+    update();
+>>>>>>> fb1657d37226a199a2daa0809beb3df48f6fa5cc
     paintEvent(NULL);
     if (lose) {
         lose = false;//下一局的flag设置
@@ -234,8 +238,11 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
         clickPosRow=ret.first; clickPosCol=ret.second;
 
         chessOneByPerson();//其实是ByAI
+<<<<<<< HEAD
         //重新绘制
         update();//返回主事件循环时重绘，效率更高但不会立即调用paintEvent
+=======
+>>>>>>> fb1657d37226a199a2daa0809beb3df48f6fa5cc
     }
     lose = false;//下一局的flag设置
 }
@@ -265,8 +272,13 @@ void MainWindow::chessOneByPerson()
             if (btnValue == QMessageBox::Ok)
                 reGame();
         }
+<<<<<<< HEAD
 
         //update();
+=======
+        // 重新绘制
+        update();
+>>>>>>> fb1657d37226a199a2daa0809beb3df48f6fa5cc
         timer_update();//重新倒计时
     }
 }
