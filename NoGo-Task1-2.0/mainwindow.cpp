@@ -3,7 +3,8 @@
 
 #include <math.h>
 #include <QMessageBox>
-
+#include "w_changemode.h"
+#include "QDebug"
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -86,34 +87,22 @@ void MainWindow::initGame()
     game = new GameModel;
     //NoGoAI = new ai;
     //创建消息框
-    QMessageBox MyBox(QMessageBox::Question,"","");
-    MyBox.setParent(this);
-    MyBox.setWindowFlag(Qt::Dialog);
-    MyBox.setWindowTitle("AI");
-    MyBox.setText("是否与AI对打");
-    //自定义两个按钮
-    agreeBut = MyBox.addButton("同意",QMessageBox::AcceptRole);
-    disagreeBut = MyBox.addButton("拒绝",QMessageBox::RejectRole);
-    QObject::connect(&MyBox,&QMessageBox::buttonClicked,this,&MainWindow::buttonClicked);
-
-    MyBox.exec();
+    w_ChangeMode w1;
+    w1.exec();
+    extern GameType game_typeForAll;
+    game_type = game_typeForAll;
+    qDebug()<<"00now game_type is"<<game_typeForAll;
+    initGameMode(game_typeForAll);
     timer_init();
 }
 
 void MainWindow::reGame()
 {
-    //创建消息框
-    QMessageBox MyBox(QMessageBox::Question,"","");
-    MyBox.setParent(this);
-    MyBox.setWindowFlag(Qt::Dialog);
-    MyBox.setWindowTitle("AI");
-    MyBox.setText("是否与AI对打");
-    //自定义两个按钮
-    agreeBut = MyBox.addButton("同意",QMessageBox::AcceptRole);
-    disagreeBut = MyBox.addButton("拒绝",QMessageBox::RejectRole);
-    QObject::connect(&MyBox,&QMessageBox::buttonClicked,this,&MainWindow::buttonClicked);
-
-    MyBox.exec();
+    w_ChangeMode w1;
+    w1.exec();
+    extern GameType game_typeForAll;
+    game_type = game_typeForAll;
+    initGameMode(game_typeForAll);
     timer_update();
 }
 
@@ -344,7 +333,7 @@ void MainWindow::timelimit_exceeded()
         reGame();
 }
 
-void MainWindow::buttonClicked(QAbstractButton *butClicked){//选择是否为对阵AI模式
+/*void MainWindow::buttonClicked(QAbstractButton *butClicked){//选择是否为对阵AI模式
     if(butClicked == (QAbstractButton*)agreeBut) {
         game_type = AI;
         initGameMode(AI);
@@ -353,7 +342,7 @@ void MainWindow::buttonClicked(QAbstractButton *butClicked){//选择是否为对
         game_type = MAN;
         initGameMode(MAN);
     }
-}
+}*/
 
 
 

@@ -12,17 +12,23 @@ SOURCES += \
     GameModel.cpp \
     main.cpp \
     mainwindow.cpp \
-    nogo_ai.cpp
+    nogo_ai.cpp \
+    w_changemode.cpp
 
 HEADERS += \
     GameModel.h \
     mainwindow.h \
-    nogo_ai.h
+    nogo_ai.h \
+    w_changemode.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    w_changemode.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    Pic.qrc

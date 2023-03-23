@@ -65,7 +65,6 @@ private:
 private slots:
     void on_pushButton_clicked();//认输
     void TimerCount();//一秒一刷新
-    void buttonClicked(QAbstractButton *butClicked);//选择模式
 };
 
 
