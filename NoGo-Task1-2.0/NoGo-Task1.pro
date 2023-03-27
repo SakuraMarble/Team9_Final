@@ -10,20 +10,23 @@ CONFIG += c++17
 
 SOURCES += \
     GameModel.cpp \
+    dialogchoosemode.cpp \
     main.cpp \
     mainwindow.cpp \
     nogo_ai.cpp \
-    w_changemode.cpp
+    signinwindow.cpp
 
 HEADERS += \
     GameModel.h \
+    dialogchoosemode.h \
     mainwindow.h \
     nogo_ai.h \
-    w_changemode.h
+    signinwindow.h
 
 FORMS += \
+    dialogchoosemode.ui \
     mainwindow.ui \
-    w_changemode.ui
+    signinwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -31,4 +34,4 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
-    Pic.qrc
+    img.qrc

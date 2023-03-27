@@ -63,8 +63,9 @@ private:
     void timer_update();//重新倒计时
 
 private slots:
-    void on_pushButton_clicked();//认输
+    void on_pushButton_Surrender_clicked();//认输
     void TimerCount();//一秒一刷新
+    void on_pushButton_Cheating_clicked();
 };
 
 

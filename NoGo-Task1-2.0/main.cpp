@@ -1,5 +1,4 @@
-#include "mainwindow.h"
-
+#include "signinwindow.h"
 #include <QApplication>
 
 #include <QAbstractButton>
@@ -12,7 +11,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    MainWindow w;
+    SignInWindow w;
     w.show();
 
     return a.exec();

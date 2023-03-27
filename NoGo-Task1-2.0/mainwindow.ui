@@ -20,17 +20,17 @@
    <property name="mouseTracking">
     <bool>true</bool>
    </property>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="pushButton_Surrender">
     <property name="geometry">
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>81</width>
+      <width>91</width>
       <height>21</height>
      </rect>
     </property>
     <property name="text">
-     <string>认输QAQ</string>
+     <string>SurrenderQAQ</string>
     </property>
    </widget>
    <widget class="QLabel" name="label">
@@ -44,6 +44,51 @@
     </property>
     <property name="text">
      <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_UserName">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>540</y>
+      <width>81</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>UserName</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_UserNameNotion">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>540</y>
+      <width>51</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font-weight:1000;</string>
+    </property>
+    <property name="text">
+     <string>UserName:</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_Cheating">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>0</y>
+      <width>151</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color:red</string>
+    </property>
+    <property name="text">
+     <string>Cheating(Valid in PVE)</string>
     </property>
    </widget>
   </widget>

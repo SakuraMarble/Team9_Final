@@ -3,8 +3,7 @@
 
 #include <math.h>
 #include <QMessageBox>
-#include "w_changemode.h"
-#include "QDebug"
+#include "dialogchoosemode.h"
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -15,6 +14,16 @@ MainWindow::MainWindow(QWidget *parent)
     setFixedSize(
         MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE,
         MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE);
+    extern QString UserName;
+    ui->statusbar->addPermanentWidget(ui->label_UserNameNotion);
+    if(UserName != "team9")
+    {
+        ui->label_UserName->setText(UserName);
+    } else {
+    ui->label_UserName->setStyleSheet("color:red;");
+    ui->label_UserName->setText(UserName+"(You are the VIP)");
+    }
+    ui->statusbar->addPermanentWidget(ui->label_UserName);
     initGame();
 
 }
@@ -27,6 +36,24 @@ MainWindow::~MainWindow()
 //实现paintEvent方法
 void MainWindow::paintEvent(QPaintEvent * event)
 {
+    if(game_type == MAN)
+    {
+        if(game->playerFlag == true)
+        {
+            ui->statusbar->showMessage("Black is thinking...");
+        } else {
+        ui->statusbar->showMessage("White is thinking...");
+        }
+    }
+    if(game_type == AI)
+    {
+        if(game->playerFlag == true)
+        {
+            ui->statusbar->showMessage("Black is thinking...");
+        } else {
+        ui->statusbar->showMessage("White(AI) is thinking...");
+        }
+    }
     QPainter painter(this);
     // 绘制棋盘
     painter.setRenderHint(QPainter::Antialiasing,true); // 抗锯齿
@@ -87,20 +114,18 @@ void MainWindow::initGame()
     game = new GameModel;
     //NoGoAI = new ai;
     //创建消息框
-    w_ChangeMode w1;
-    w1.exec();
     extern GameType game_typeForAll;
     game_type = game_typeForAll;
-    qDebug()<<"00now game_type is"<<game_typeForAll;
     initGameMode(game_typeForAll);
     timer_init();
 }
 
 void MainWindow::reGame()
 {
-    w_ChangeMode w1;
-    w1.exec();
-    extern GameType game_typeForAll;
+    close();
+    DialogChooseMode w;
+    w.exec();
+    extern GameType game_typeForAll; //声明在choosemode中
     game_type = game_typeForAll;
     initGameMode(game_typeForAll);
     timer_update();
@@ -201,6 +226,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
 
 void MainWindow::mouseReleaseEvent(QMouseEvent * event)
 {
+
     if (selectPos == false) {
         return;
     } else {
@@ -262,7 +288,7 @@ void MainWindow::chessOneByPerson()
     }
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_pushButton_Surrender_clicked()
 {
     game->gameStatus = DEAD;
     timer->stop();//停止计时
@@ -345,12 +371,18 @@ void MainWindow::timelimit_exceeded()
 }*/
 
 
-
-
-
-
-
-
-
-
-
+void MainWindow::on_pushButton_Cheating_clicked()
+{
+    if(ui->label_UserName->text() == "team9(You are the VIP)"&& game_type == AI)
+    {
+        game->gameStatus = DEAD;
+        timer->stop();//停止计时
+        QString str = "The black";
+        lose = true;//用于对局return
+        QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
+        if (btnValue == QMessageBox::Ok)
+            reGame();
+    }else{
+        QMessageBox::warning(this,"Sorry","You're not the VIP or the game type is not PVE,so you can't do this.");
+    }
+}

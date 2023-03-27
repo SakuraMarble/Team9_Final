@@ -1,6 +1,8 @@
 #include "GameModel.h"
 #define point_index(row,col) (100 * row + col)
 #include "nogo_ai.h"
+#include "mainwindow.h"
+
 void GameModel::startGame(GameType type)
 {
     gameType = type; // 前面的gameType是GameModel类中的成员变量
@@ -55,6 +57,7 @@ void GameModel::updateGameMap(int row, int col)
 
     // 换手
     playerFlag = !playerFlag;
+
 }
 
 bool GameModel::isLose(int row, int col)//merge_group并查集算法已统一边界标准，人人对战无需多次declare newai

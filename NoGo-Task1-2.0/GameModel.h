@@ -31,6 +31,7 @@ const int POS_OFFSET = BLOCK_SIZE * 0.4; // 20 鼠标点击的模糊距离上限
 
 const int AI_THINK_TIME = 700; // AI下棋思考时间
 
+
 class GameModel{
 public:
     GameModel(){};
