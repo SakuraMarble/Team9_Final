@@ -4,7 +4,7 @@
 #include "mainwindow.h"
 #include <QMessageBox>
 #include <QPixmap>
-GameType game_typeForAll;
+
 DialogChooseMode::DialogChooseMode(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::DialogChooseMode)
@@ -24,7 +24,14 @@ void DialogChooseMode::on_pushButton_PVE_clicked()
 {
     hide();
     game_typeForAll = AI;
-    MainWindow *w = new MainWindow();
+    QString str = ui->plainTextEdit->toPlainText();
+    if (!str.isEmpty()) {
+        bool ok;
+        str.toInt(&ok);
+        if (ok)
+            timelimit = str.toInt();
+    }
+    MainWindow *w = new MainWindow(nullptr,this);
     w->show();
 }
 
@@ -34,7 +41,14 @@ void DialogChooseMode::on_pushButton_LocalPVP_clicked()
 {
     hide();
     game_typeForAll = MAN;
-    MainWindow *w = new MainWindow();
+    QString str = ui->plainTextEdit->toPlainText();
+    if (!str.isEmpty()) {
+        bool ok;
+        str.toInt(&ok);
+        if (ok)
+            timelimit = str.toInt();
+    }
+    MainWindow *w = new MainWindow(nullptr,this);
     w->show();
 }
 
