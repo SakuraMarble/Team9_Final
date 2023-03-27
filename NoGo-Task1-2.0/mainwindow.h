@@ -12,6 +12,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <nogo_ai.h>
+#include <dialogchoosemode.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -21,12 +22,13 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget *parent = nullptr,DialogChooseMode *dialog_ = nullptr);
     ~MainWindow();
     void timer_init();//初始化计时器
 
 private:
     Ui::MainWindow *ui;
+    DialogChooseMode* dialog;
 
     QTimer *timer;//计时器
     QLabel *countlabel;//倒计时label

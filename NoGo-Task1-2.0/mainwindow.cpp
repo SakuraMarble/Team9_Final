@@ -4,9 +4,8 @@
 #include <math.h>
 #include <QMessageBox>
 #include "dialogchoosemode.h"
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent,DialogChooseMode *dialog_)
+    : QMainWindow(parent),dialog(dialog_), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     //setMouseTracking(true);
@@ -14,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
     setFixedSize(
         MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE,
         MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE);
-    extern QString UserName;
+    QString UserName = dialog->user_name;
     ui->statusbar->addPermanentWidget(ui->label_UserNameNotion);
     if(UserName != "team9")
     {
@@ -114,9 +113,10 @@ void MainWindow::initGame()
     game = new GameModel;
     //NoGoAI = new ai;
     //创建消息框
-    extern GameType game_typeForAll;
-    game_type = game_typeForAll;
-    initGameMode(game_typeForAll);
+
+    game_type = dialog->game_typeForAll;
+    TimerLimit = dialog->timelimit;
+    initGameMode(game_type);
     timer_init();
 }
 
@@ -125,9 +125,9 @@ void MainWindow::reGame()
     close();
     DialogChooseMode w;
     w.exec();
-    extern GameType game_typeForAll; //声明在choosemode中
-    game_type = game_typeForAll;
-    initGameMode(game_typeForAll);
+    game_type = w.game_typeForAll;
+    TimerLimit = w.timelimit;
+    initGameMode(game_type);
     timer_update();
 }
 

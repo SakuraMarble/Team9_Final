@@ -4,7 +4,7 @@
 #include <QMessageBox>
 #include <QString>
 #include <QShortcut>
-QString UserName;
+
 SignInWindow::SignInWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::SignInWindow)
@@ -27,8 +27,8 @@ void SignInWindow::on_pushButton_clicked()
             (ui->lineEdit_UserName->text() == "team9" && ui->lineEdit_Password->text() == "lycggisgreat"))
     {
         hide();
-        UserName = ui->lineEdit_UserName->text();
         DialogChooseMode w;
+        w.user_name = ui->lineEdit_UserName->text();
         w.exec();
     } else {
         QMessageBox *warning = new QMessageBox(this);
