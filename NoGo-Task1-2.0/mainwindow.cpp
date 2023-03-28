@@ -4,8 +4,8 @@
 #include <math.h>
 #include <QMessageBox>
 #include "dialogchoosemode.h"
-MainWindow::MainWindow(QWidget *parent,DialogChooseMode *dialog_)
-    : QMainWindow(parent),dialog(dialog_), ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent,QString username)
+    : QMainWindow(parent),UserName(username), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     //setMouseTracking(true);
@@ -13,7 +13,6 @@ MainWindow::MainWindow(QWidget *parent,DialogChooseMode *dialog_)
     setFixedSize(
         MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE,
         MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE);
-    QString UserName = dialog->user_name;
     ui->statusbar->addPermanentWidget(ui->label_UserNameNotion);
     if(UserName != "team9")
     {
@@ -113,20 +112,15 @@ void MainWindow::initGame()
     game = new GameModel;
     //NoGoAI = new ai;
     //创建消息框
-
-    game_type = dialog->game_typeForAll;
-    TimerLimit = dialog->timelimit;
+    choosemode();
     initGameMode(game_type);
     timer_init();
 }
 
 void MainWindow::reGame()
 {
-    close();
-    DialogChooseMode w;
-    w.exec();
-    game_type = w.game_typeForAll;
-    TimerLimit = w.timelimit;
+    //close();
+    choosemode();
     initGameMode(game_type);
     timer_update();
 }
@@ -299,8 +293,9 @@ void MainWindow::on_pushButton_Surrender_clicked()
         str = "The black"; //白色认输黑色win！
 
     QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
-    if (btnValue == QMessageBox::Ok)
+    if (btnValue == QMessageBox::Ok) {
         reGame();
+    }
 }
 
 void MainWindow::timer_init()
@@ -308,15 +303,9 @@ void MainWindow::timer_init()
     timer = new QTimer;
     countlabel = ui->label;
     countlabel->setAlignment(Qt::AlignHCenter);
-    //layout = new QVBoxLayout;
-    //layout->addWidget(countlabel);
-    //layout->addWidget(ui->pushButton);
-    //centralWidget = new QWidget;
-    //centralWidget->setLayout(layout);
 
     timer->setInterval(1000);//1s刷新一次
     TimerCountNumber = TimerLimit;
-    //setCentralWidget(centralWidget);
 
     connect(timer,&QTimer::timeout,this,&MainWindow::TimerCount);//关联刷新倒计时
     //if (timer->isActive())
@@ -356,7 +345,11 @@ void MainWindow::timelimit_exceeded()
 
     QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", "You have exceeded the time limit," + str + " wins！");
     if (btnValue == QMessageBox::Ok)
+    {
+        //this->close();
         reGame();
+        //delete this;
+    }
 }
 
 /*void MainWindow::buttonClicked(QAbstractButton *butClicked){//选择是否为对阵AI模式
@@ -385,4 +378,13 @@ void MainWindow::on_pushButton_Cheating_clicked()
     }else{
         QMessageBox::warning(this,"Sorry","You're not the VIP or the game type is not PVE,so you can't do this.");
     }
+}
+
+void MainWindow::choosemode()
+{
+    DialogChooseMode *dialog = new DialogChooseMode;
+    dialog->exec();
+    game_type = dialog->game_typeForAll;
+    TimerLimit = dialog->timelimit;
+    delete dialog;
 }

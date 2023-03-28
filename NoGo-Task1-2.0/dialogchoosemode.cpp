@@ -31,8 +31,6 @@ void DialogChooseMode::on_pushButton_PVE_clicked()
         if (ok)
             timelimit = str.toInt();
     }
-    MainWindow *w = new MainWindow(nullptr,this);
-    w->show();
 }
 
 
@@ -48,8 +46,6 @@ void DialogChooseMode::on_pushButton_LocalPVP_clicked()
         if (ok)
             timelimit = str.toInt();
     }
-    MainWindow *w = new MainWindow(nullptr,this);
-    w->show();
 }
 
 

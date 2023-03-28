@@ -1,6 +1,7 @@
 #include "signinwindow.h"
 #include "ui_signinwindow.h"
 #include "dialogchoosemode.h"
+#include <mainwindow.h>
 #include <QMessageBox>
 #include <QString>
 #include <QShortcut>
@@ -27,9 +28,13 @@ void SignInWindow::on_pushButton_clicked()
             (ui->lineEdit_UserName->text() == "team9" && ui->lineEdit_Password->text() == "lycggisgreat"))
     {
         hide();
+        MainWindow *w = new MainWindow(nullptr,ui->lineEdit_UserName->text());
+        w->show();
+        /***
         DialogChooseMode w;
         w.user_name = ui->lineEdit_UserName->text();
         w.exec();
+        ***/
     } else {
         QMessageBox *warning = new QMessageBox(this);
         warning->warning(this,"Warning","The UserName or Password is wrong");
