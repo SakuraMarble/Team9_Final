@@ -22,13 +22,13 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr,DialogChooseMode *dialog_ = nullptr);
+    MainWindow(QWidget *parent = nullptr,QString username = "passerby");
     ~MainWindow();
     void timer_init();//初始化计时器
 
 private:
     Ui::MainWindow *ui;
-    DialogChooseMode* dialog;
+    //DialogChooseMode* dialog;
 
     QTimer *timer;//计时器
     QLabel *countlabel;//倒计时label
@@ -36,6 +36,7 @@ private:
     //QWidget *centralWidget;
     QPushButton *agreeBut;
     QPushButton *disagreeBut;
+    QString UserName;
 
     GameModel *game; // 游戏指针
     GameType game_type; // 存储游戏类型
@@ -63,6 +64,7 @@ private:
 
     void timelimit_exceeded();//超时
     void timer_update();//重新倒计时
+    void choosemode();//开局或重开选择模式&设置时间限制
 
 private slots:
     void on_pushButton_Surrender_clicked();//认输
