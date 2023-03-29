@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
 #include <math.h>
 #include <QMessageBox>
 #include "dialogchoosemode.h"
@@ -8,6 +7,7 @@ MainWindow::MainWindow(QWidget *parent,QString username)
     : QMainWindow(parent),UserName(username), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
     //setMouseTracking(true);
     // 设置窗口大小
     setFixedSize(
@@ -34,6 +34,12 @@ MainWindow::~MainWindow()
 //实现paintEvent方法
 void MainWindow::paintEvent(QPaintEvent * event)
 {
+    QPixmap pixmap;
+    pixmap.load(":/img/img/Wood.jpg");
+    pixmap = pixmap.scaled(MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE,MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE);
+    QPainter paint(this);
+    paint.drawPixmap(0, 0, pixmap);
+    QWidget::paintEvent(event);
     if(game_type == MAN)
     {
         if(game->playerFlag == true)
@@ -85,12 +91,21 @@ void MainWindow::paintEvent(QPaintEvent * event)
     }
 
     // 绘制棋子
+    // 设置画笔颜色、宽度
+    painter.setPen(QPen(Qt::gray, 2));
     for (int i = 0; i < BOARD_GRAD_SIZE; i++)
         for (int j = 0; j < BOARD_GRAD_SIZE; j++)
         {
             if (game->gameMapVec[i][j] == 1)
             {
                 //brush.setColor(Qt::white);
+                /*QLinearGradient gradient(MARGIN + BLOCK_SIZE * j - CHESS_RADIUS,MARGIN + BLOCK_SIZE * i - CHESS_RADIUS,CHESS_RADIUS * 2,CHESS_RADIUS * 2);
+                gradient.setColorAt(0,Qt::black);
+
+                gradient.setColorAt(1,Qt::blue);
+
+                painter.setBrush(QBrush(gradient));
+                painter.drawEllipse(MARGIN + BLOCK_SIZE * j - CHESS_RADIUS,MARGIN + BLOCK_SIZE * i - CHESS_RADIUS,CHESS_RADIUS * 2,CHESS_RADIUS * 2);*/
                 brush.setColor(Qt::black);
 
                 painter.setBrush(brush);

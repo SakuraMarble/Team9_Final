@@ -2,5 +2,7 @@
     <qresource prefix="/img">
         <file>img/KeJie.jpg</file>
         <file>img/Bochii.jpg</file>
+        <file>img/Wood.jpg</file>
+        <file>img/5390.wav</file>
     </qresource>
 </RCC>
