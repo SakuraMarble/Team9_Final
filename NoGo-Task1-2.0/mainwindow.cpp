@@ -92,30 +92,26 @@ void MainWindow::paintEvent(QPaintEvent * event)
 
     // 绘制棋子
     // 设置画笔颜色、宽度
-    painter.setPen(QPen(Qt::gray, 2));
+    painter.setPen(QPen(Qt::transparent, 2));
     for (int i = 0; i < BOARD_GRAD_SIZE; i++)
         for (int j = 0; j < BOARD_GRAD_SIZE; j++)
         {
             if (game->gameMapVec[i][j] == 1)
             {
-                //brush.setColor(Qt::white);
-                /*QLinearGradient gradient(MARGIN + BLOCK_SIZE * j - CHESS_RADIUS,MARGIN + BLOCK_SIZE * i - CHESS_RADIUS,CHESS_RADIUS * 2,CHESS_RADIUS * 2);
-                gradient.setColorAt(0,Qt::black);
+                QLinearGradient gradient(MARGIN + BLOCK_SIZE * j, MARGIN + BLOCK_SIZE * i, MARGIN + BLOCK_SIZE * j + CHESS_RADIUS, MARGIN + BLOCK_SIZE * i + CHESS_RADIUS);
+                gradient.setColorAt(0, QColor(0, 0, 0));
+                gradient.setColorAt(1, QColor(255, 255, 255));
 
-                gradient.setColorAt(1,Qt::blue);
-
-                painter.setBrush(QBrush(gradient));
-                painter.drawEllipse(MARGIN + BLOCK_SIZE * j - CHESS_RADIUS,MARGIN + BLOCK_SIZE * i - CHESS_RADIUS,CHESS_RADIUS * 2,CHESS_RADIUS * 2);*/
-                brush.setColor(Qt::black);
-
-                painter.setBrush(brush);
+                painter.setBrush(gradient);
                 painter.drawEllipse(MARGIN + BLOCK_SIZE * j - CHESS_RADIUS,MARGIN + BLOCK_SIZE * i - CHESS_RADIUS,CHESS_RADIUS * 2,CHESS_RADIUS * 2);
             }
             else if (game->gameMapVec[i][j] == 0)
             {
-                brush.setColor(Qt::white);
+                QLinearGradient gradient(MARGIN + BLOCK_SIZE * j, MARGIN + BLOCK_SIZE * i, MARGIN + BLOCK_SIZE * j + CHESS_RADIUS, MARGIN + BLOCK_SIZE * i + CHESS_RADIUS);
+                gradient.setColorAt(0, QColor(255,255,255));
+                gradient.setColorAt(1, QColor(173,216,230));
 
-                painter.setBrush(brush);
+                painter.setBrush(gradient);
                 painter.drawEllipse(MARGIN + BLOCK_SIZE * j - CHESS_RADIUS,MARGIN + BLOCK_SIZE * i - CHESS_RADIUS,CHESS_RADIUS * 2,CHESS_RADIUS * 2);
             }
         }
