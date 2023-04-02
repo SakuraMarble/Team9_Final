@@ -98,9 +98,9 @@ void MainWindow::paintEvent(QPaintEvent * event)
         {
             if (game->gameMapVec[i][j] == 1)
             {
-                QLinearGradient gradient(MARGIN + BLOCK_SIZE * j, MARGIN + BLOCK_SIZE * i, MARGIN + BLOCK_SIZE * j + CHESS_RADIUS, MARGIN + BLOCK_SIZE * i + CHESS_RADIUS);
-                gradient.setColorAt(0, QColor(0, 0, 0));
-                gradient.setColorAt(1, QColor(255, 255, 255));
+                QLinearGradient gradient(MARGIN + BLOCK_SIZE * j - 1.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * i - 1.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * j , MARGIN + BLOCK_SIZE * i);
+                gradient.setColorAt(0, QColor(255,255,255));
+                gradient.setColorAt(1, QColor(0, 0, 0));
 
                 painter.setBrush(gradient);
                 painter.drawEllipse(MARGIN + BLOCK_SIZE * j - CHESS_RADIUS,MARGIN + BLOCK_SIZE * i - CHESS_RADIUS,CHESS_RADIUS * 2,CHESS_RADIUS * 2);
@@ -112,7 +112,7 @@ void MainWindow::paintEvent(QPaintEvent * event)
                 gradient.setColorAt(1, QColor(173,216,230));
 
                 painter.setBrush(gradient);
-                painter.drawEllipse(MARGIN + BLOCK_SIZE * j - CHESS_RADIUS,MARGIN + BLOCK_SIZE * i - CHESS_RADIUS,CHESS_RADIUS * 2,CHESS_RADIUS * 2);
+                painter.drawEllipse(MARGIN + BLOCK_SIZE * j - CHESS_RADIUS ,MARGIN + BLOCK_SIZE * i - CHESS_RADIUS ,CHESS_RADIUS * 2,CHESS_RADIUS * 2);
             }
         }
 }
