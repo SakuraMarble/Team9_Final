@@ -131,7 +131,8 @@ void MainWindow::initGame()
 
 void MainWindow::reGame()
 {
-    //close();
+    Black_Log.clear();
+    White_Log.clear();
     choosemode();
     initGameMode(game_type);
     timer_update();
@@ -270,7 +271,11 @@ void MainWindow::chessOneByPerson()
     if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1)
     {
         // 在游戏的数据模型中落子
-        game->actionByPerson(clickPosRow, clickPosCol);
+        if (game->playerFlag)
+            Black_Log.push_back(make_pair(clickPosRow - 1 + 'A',clickPosCol));
+        else
+            White_Log.push_back(make_pair(clickPosRow - 1 + 'A',clickPosCol)); //记录对局信息
+        game->actionByPerson(clickPosRow, clickPosCol);//此处已换手
         // 播放落子音效，待实现；
         if (game->isLose(clickPosRow, clickPosCol) && game->gameStatus == PLAYING)
         {
@@ -284,6 +289,7 @@ void MainWindow::chessOneByPerson()
             else if (game->gameMapVec[clickPosRow][clickPosCol] == 0)
                 str = "The black";
             lose = true;//用于对局return
+
             QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
             if (btnValue == QMessageBox::Ok)
                 reGame();
@@ -299,15 +305,20 @@ void MainWindow::on_pushButton_Surrender_clicked()
     game->gameStatus = DEAD;
     timer->stop();//停止计时
     QString str;
-    if (game->playerFlag)
+
+    if (game->playerFlag) {
         str = "The white"; //黑色认输白色赢！
-    else
+        Black_Log.push_back(make_pair('G',0));
+    }
+
+    else {
         str = "The black"; //白色认输黑色win！
+        White_Log.push_back(make_pair('G',0));//记录认输
+    }
 
     QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
-    if (btnValue == QMessageBox::Ok) {
+    if (btnValue == QMessageBox::Ok)
         reGame();
-    }
 }
 
 void MainWindow::timer_init()
@@ -357,11 +368,7 @@ void MainWindow::timelimit_exceeded()
 
     QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", "You have exceeded the time limit," + str + " wins！");
     if (btnValue == QMessageBox::Ok)
-    {
-        //this->close();
         reGame();
-        //delete this;
-    }
 }
 
 /*void MainWindow::buttonClicked(QAbstractButton *butClicked){//选择是否为对阵AI模式

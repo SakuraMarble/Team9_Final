@@ -14,6 +14,8 @@
 #include <nogo_ai.h>
 #include <dialogchoosemode.h>
 
+#define info pair<char,int>
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -50,6 +52,9 @@ private:
     int clickPosRow,clickPosCol; // 存储即将点击的位置
     bool selectPos = false; // 是否移动到合适的位置，以选中某个交叉点
     bool lose = false;//解决AI重开先后手问题
+
+    vector<info> Black_Log;
+    vector<info> White_Log;//记录对局的数组
 
     // 绘制
     void paintEvent(QPaintEvent * event);
