@@ -40,11 +40,18 @@ void DialogChooseMode::on_pushButton_LocalPVP_clicked()
     hide();
     game_typeForAll = MAN;
     QString str = ui->plainTextEdit->toPlainText();
+    QString str_size = ui->plainTextEdit_2->toPlainText();
     if (!str.isEmpty()) {
         bool ok;
         str.toInt(&ok);
         if (ok)
             timelimit = str.toInt();
+    }
+    if (!str_size.isEmpty()) {
+        bool ok;
+        str_size.toInt(&ok);
+        if (ok)
+            pvp_boardsize = str_size.toInt() + 1;
     }
 }
 

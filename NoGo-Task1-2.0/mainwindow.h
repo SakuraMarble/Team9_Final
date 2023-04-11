@@ -45,6 +45,7 @@ private:
 
     int TimerCountNumber;
     int TimerLimit = 30;//后期可在软件内设置
+    int BOARD_GRAD_SIZE = 16;
 
     int clickPosRow,clickPosCol; // 存储即将点击的位置
     bool selectPos = false; // 是否移动到合适的位置，以选中某个交叉点
