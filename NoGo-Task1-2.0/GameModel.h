@@ -9,7 +9,8 @@
 enum GameType
 {
     MAN,
-    AI
+    AI,
+    Online
 };
 
 //游戏状态
@@ -20,8 +21,6 @@ enum GameStatus
     DEAD
 };
 
-//棋盘尺寸
-const int BOARD_GRAD_SIZE = 16;
 
 const int MARGIN = 30; // 棋盘边缘空隙
 const int CHESS_RADIUS = 15; // 棋子半径
@@ -39,6 +38,7 @@ public:
     int group[2][group_size];
     int rank[2][group_size];
     int direction[4][2] = {{1,0},{-1,0},{0,1},{0,-1}};
+    int BOARD_GRAD_SIZE = 16;//棋盘尺寸
     //存储当前游戏棋盘和棋子的情况，空白为-1，黑子1，白子0
     std::vector<std::vector<int>> gameMapVec;
 

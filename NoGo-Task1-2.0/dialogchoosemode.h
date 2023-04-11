@@ -27,6 +27,7 @@ private slots:
 
 private:
     GameType game_typeForAll;
+    int pvp_boardsize = 16;
     int timelimit = 30;
     Ui::DialogChooseMode *ui;
 };

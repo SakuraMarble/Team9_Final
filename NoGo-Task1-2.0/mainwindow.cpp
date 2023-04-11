@@ -37,6 +37,7 @@ void MainWindow::paintEvent(QPaintEvent * event)
     QPixmap pixmap;
     pixmap.load(":/img/img/Wood.jpg");
     pixmap = pixmap.scaled(MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE,MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE);
+
     QPainter paint(this);
     paint.drawPixmap(0, 0, pixmap);
     QWidget::paintEvent(event);
@@ -396,6 +397,21 @@ void MainWindow::choosemode()
     DialogChooseMode *dialog = new DialogChooseMode;
     dialog->exec();
     game_type = dialog->game_typeForAll;
+
+    if (game_type == MAN) {
+        game->BOARD_GRAD_SIZE = dialog->pvp_boardsize > 16 ? 16 : dialog->pvp_boardsize;
+        if (game->BOARD_GRAD_SIZE < 4)
+            game->BOARD_GRAD_SIZE = 4;
+        BOARD_GRAD_SIZE = game->BOARD_GRAD_SIZE;
+    }
+    else {
+        game->BOARD_GRAD_SIZE = 16;
+        BOARD_GRAD_SIZE = 16;
+    }
+    // 设置窗口大小
+    setFixedSize(
+        MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE,
+        MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE);
     TimerLimit = dialog->timelimit;
     delete dialog;
 }
