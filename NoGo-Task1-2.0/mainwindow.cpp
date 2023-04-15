@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 #include <math.h>
 #include <QMessageBox>
+#include <QStandardPaths>
+#include <QDir>
 #include "dialogchoosemode.h"
 MainWindow::MainWindow(QWidget *parent,QString username)
     : QMainWindow(parent),UserName(username), ui(new Ui::MainWindow)
@@ -216,13 +218,14 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
         }
 
         // 判断输赢,请移步mouseReleaseEvent
+        /*
         if (clickPosRow > 0 && clickPosRow < BOARD_GRAD_SIZE &&
             clickPosCol > 0 && clickPosCol < BOARD_GRAD_SIZE &&
             (game->gameMapVec[clickPosRow][clickPosCol] == 1 ||
              game->gameMapVec[clickPosRow][clickPosCol] == 0))
         {
 
-        }
+        }*/
 
 
     }
@@ -291,8 +294,10 @@ void MainWindow::chessOneByPerson()
             lose = true;//用于对局return
 
             QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
-            if (btnValue == QMessageBox::Ok)
+            if (btnValue == QMessageBox::Ok) {
+                ask_keeplogs();//询问是否保存对局记录
                 reGame();
+            }
         }
 
         //update();
@@ -317,8 +322,10 @@ void MainWindow::on_pushButton_Surrender_clicked()
     }
 
     QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
-    if (btnValue == QMessageBox::Ok)
+    if (btnValue == QMessageBox::Ok) {
+        ask_keeplogs();//询问是否保存对局记录
         reGame();
+    }
 }
 
 void MainWindow::timer_init()
@@ -367,8 +374,10 @@ void MainWindow::timelimit_exceeded()
         str = "The black"; //白色TL黑色win！
 
     QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", "You have exceeded the time limit," + str + " wins！");
-    if (btnValue == QMessageBox::Ok)
+    if (btnValue == QMessageBox::Ok) {
+        ask_keeplogs();//询问是否保存对局记录
         reGame();
+    }
 }
 
 /*void MainWindow::buttonClicked(QAbstractButton *butClicked){//选择是否为对阵AI模式
@@ -421,4 +430,57 @@ void MainWindow::choosemode()
         MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE);
     TimerLimit = dialog->timelimit;
     delete dialog;
+}
+
+void MainWindow::ask_keeplogs()
+{
+    int res = QMessageBox::question(this, tr("Asking"), tr("Whether to keep logs?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认不保存
+    if (res == QMessageBox::Yes) {
+        //用户选择保存记录
+
+        QString documentPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+        QString subdirectory = "NoGo_Logs";
+        QDir dir(documentPath + "/" + subdirectory);
+        if (!dir.exists()) {
+            dir.mkpath(".");
+        }//在Windows用户保存文档的位置打开或创建NoGo_Logs文件夹
+
+        auto now_time = std::chrono::system_clock::now();//获取时间
+        auto timestamp = std::chrono::system_clock::to_time_t(now_time);//转换成本地时间
+        std::stringstream log_time;
+        log_time << std::put_time(std::localtime(&timestamp), "%Y-%m-%d_%H.%M.%S");//规范时间格式 不能有'/' ':'
+        QString filename = "Log_" + QString::fromStdString(log_time.str()) + ".txt";
+        QString filepath = dir.absoluteFilePath(filename);
+        std::ofstream out(filepath.toStdString());
+
+        if (out.is_open()) {
+            for (const auto& p : Black_Log) {
+                if (!p.second && p.first == 'G')//认输记录为"G0" 按要求只输出'G'
+                    out << p.first << ' ';
+                else
+                    out << p.first << p.second << ' ';
+            }
+            out << std::endl;//代表一方记录输出结束
+            for (const auto& p : White_Log) {
+                if (!p.second && p.first == 'G')
+                    out << p.first << ' ';
+                else
+                    out << p.first << p.second << ' ';
+            }
+            out << std::endl;//代表一方记录输出结束
+            out.close();
+
+            QMessageBox::information(this, tr("Done!"), tr("Your logs have been saved!"));
+        }
+
+        else {
+            QMessageBox::warning(this, tr("Warning"), tr("Can't create a file"));
+        }
+    }
+
+    else {
+        //不保存
+    }
+    Black_Log.clear();
+    White_Log.clear();//清空记录
 }
