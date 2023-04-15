@@ -24,6 +24,7 @@ MainWindow::MainWindow(QWidget *parent,QString username)
     ui->label_UserName->setText(UserName+"(You are the VIP)");
     }
     ui->statusbar->addPermanentWidget(ui->label_UserName);
+    Logs.resize(2);
     initGame();
 
 }
@@ -133,8 +134,6 @@ void MainWindow::initGame()
 
 void MainWindow::reGame()
 {
-    Black_Log.clear();
-    White_Log.clear();
     choosemode();
     initGameMode(game_type);
     timer_update();
@@ -274,10 +273,8 @@ void MainWindow::chessOneByPerson()
     if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1)
     {
         // 在游戏的数据模型中落子
-        if (game->playerFlag)
-            Black_Log.push_back(make_pair(clickPosRow - 1 + 'A',clickPosCol));
-        else
-            White_Log.push_back(make_pair(clickPosRow - 1 + 'A',clickPosCol)); //记录对局信息
+        Logs[game->playerFlag].push_back(make_pair(clickPosRow - 1 + 'A',clickPosCol));
+
         game->actionByPerson(clickPosRow, clickPosCol);//此处已换手
         // 播放落子音效，待实现；
         if (game->isLose(clickPosRow, clickPosCol) && game->gameStatus == PLAYING)
@@ -309,17 +306,14 @@ void MainWindow::on_pushButton_Surrender_clicked()
 {
     game->gameStatus = DEAD;
     timer->stop();//停止计时
+    Logs[game->playerFlag].push_back(make_pair('G',0));
     QString str;
 
-    if (game->playerFlag) {
+    if (game->playerFlag)
         str = "The white"; //黑色认输白色赢！
-        Black_Log.push_back(make_pair('G',0));
-    }
 
-    else {
+    else
         str = "The black"; //白色认输黑色win！
-        White_Log.push_back(make_pair('G',0));//记录认输
-    }
 
     QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
     if (btnValue == QMessageBox::Ok) {
@@ -443,7 +437,7 @@ void MainWindow::ask_keeplogs()
         QDir dir(documentPath + "/" + subdirectory);
         if (!dir.exists()) {
             dir.mkpath(".");
-        }//在Windows用户保存文档的位置打开或创建NoGo_Logs文件夹
+        }//在windows用户默认文档保存目录打开或创建NoGo_Logs文件夹
 
         auto now_time = std::chrono::system_clock::now();//获取时间
         auto timestamp = std::chrono::system_clock::to_time_t(now_time);//转换成本地时间
@@ -454,20 +448,15 @@ void MainWindow::ask_keeplogs()
         std::ofstream out(filepath.toStdString());
 
         if (out.is_open()) {
-            for (const auto& p : Black_Log) {
-                if (!p.second && p.first == 'G')//认输记录为"G0" 按要求只输出'G'
-                    out << p.first << ' ';
-                else
-                    out << p.first << p.second << ' ';
+            for (int i = 1;i >= 0;i--) {
+                for (const auto& p : Logs[i]) {
+                    if (!p.second && p.first == 'G')//认输记录为"G0" 按要求只输出'G'
+                        out << p.first << ' ';
+                    else
+                        out << p.first << p.second << ' ';
+                }
+                out << std::endl;//代表一方记录输出结束
             }
-            out << std::endl;//代表一方记录输出结束
-            for (const auto& p : White_Log) {
-                if (!p.second && p.first == 'G')
-                    out << p.first << ' ';
-                else
-                    out << p.first << p.second << ' ';
-            }
-            out << std::endl;//代表一方记录输出结束
             out.close();
 
             QMessageBox::information(this, tr("Done!"), tr("Your logs have been saved!"));
@@ -481,6 +470,6 @@ void MainWindow::ask_keeplogs()
     else {
         //不保存
     }
-    Black_Log.clear();
-    White_Log.clear();//清空记录
+    Logs[0].clear();
+    Logs[1].clear();//清空记录
 }

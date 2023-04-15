@@ -53,8 +53,7 @@ private:
     bool selectPos = false; // 是否移动到合适的位置，以选中某个交叉点
     bool lose = false;//解决AI重开先后手问题
 
-    vector<info> Black_Log;
-    vector<info> White_Log;//记录对局的数组
+    vector<vector<info>> Logs;//记录对局的数组 0为白棋 1为黑棋
 
     // 绘制
     void paintEvent(QPaintEvent * event);
