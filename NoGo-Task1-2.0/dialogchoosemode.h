@@ -25,9 +25,11 @@ private slots:
 
     void on_pushButton_OnlinePVP_clicked();
 
+    void on_comboBox_currentIndexChanged(int index);
+
 private:
     GameType game_typeForAll;
-    int pvp_boardsize = 16;
+    int pvp_boardsize = 10;
     int timelimit = 30;
     Ui::DialogChooseMode *ui;
 };

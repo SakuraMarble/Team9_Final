@@ -47,18 +47,26 @@ void MainWindow::paintEvent(QPaintEvent * event)
     {
         if(game->playerFlag == true)
         {
+            ui->statusbar->setStyleSheet("font-size:23px;color:black;");
             ui->statusbar->showMessage("Black is thinking...");
         } else {
-        ui->statusbar->showMessage("White is thinking...");
+            ui->statusbar->setStyleSheet("font-size:23px;color:white;");
+            ui->label_UserName->setStyleSheet("color:black;");
+            ui->label_UserNameNotion->setStyleSheet("color:black;");
+            ui->statusbar->showMessage("White is thinking...");
         }
     }
     if(game_type == AI)
     {
         if(game->playerFlag == true)
         {
+            ui->statusbar->setStyleSheet("font-size:23px;color:black;");
             ui->statusbar->showMessage("Black is thinking...");
         } else {
-        ui->statusbar->showMessage("White(AI) is thinking...");
+            ui->statusbar->setStyleSheet("font-size:23px;color:white;");
+            ui->label_UserName->setStyleSheet("color:black;");
+            ui->label_UserNameNotion->setStyleSheet("color:black;");
+            ui->statusbar->showMessage("White(AI) is thinking...");
         }
     }
     QPainter painter(this);
@@ -332,22 +340,28 @@ void MainWindow::timer_init()
 {
     timer = new QTimer;
     countlabel = ui->label;
-    countlabel->setAlignment(Qt::AlignHCenter);
-
+    //countlabel->setGeometry(QRect(280,0,60,25));
+    countlabel->setStyleSheet("font-family:\"Lucida Handwriting\";font-size:23px;");
+    //countlabel->setAlignment(Qt::AlignHCenter);
     timer->setInterval(1000);//1s刷新一次
     TimerCountNumber = TimerLimit;
 
     connect(timer,&QTimer::timeout,this,&MainWindow::TimerCount);//关联刷新倒计时
     //if (timer->isActive())
-    countlabel->setText(QString::number(TimerCountNumber));
+    countlabel->setText("Remaining time:"+QString::number(TimerCountNumber));
     timer->start();
 }
 
 void MainWindow::TimerCount()
 {
     TimerCountNumber--;//1s过去了
-    countlabel->setText(QString::number(TimerCountNumber));//刷新倒计时
+    countlabel->setText("Remaining time:"+QString::number(TimerCountNumber));//刷新倒计时
+    countlabel->adjustSize();
     //setCentralWidget(centralWidget);
+    if(TimerCountNumber <= 5)
+    {
+        countlabel->setStyleSheet("font-family:\"Lucida Handwriting\";font-size:23px;color:red;");
+    }
     if (!TimerCountNumber) {
         timer->stop();
         timelimit_exceeded();//超时
@@ -359,7 +373,7 @@ void MainWindow::timer_update()
     timer->stop();
     TimerCountNumber = TimerLimit;
     //if (timer->isActive())
-    countlabel->setText(QString::number(TimerCountNumber));
+    countlabel->setText("Remaining time:"+QString::number(TimerCountNumber));
     timer->start();
 }
 
@@ -434,7 +448,7 @@ void MainWindow::choosemode()
 
 void MainWindow::ask_keeplogs()
 {
-    int res = QMessageBox::question(this, tr("Asking"), tr("Whether to keep logs?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认不保存
+    int res = QMessageBox::question(this, tr("Asking"), tr("Whether to keep logs?（If you choose Yes,you will save your logs in the default document location on windows.)"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认不保存
     if (res == QMessageBox::Yes) {
         //用户选择保存记录
 

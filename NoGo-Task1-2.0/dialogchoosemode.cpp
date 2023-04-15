@@ -40,19 +40,19 @@ void DialogChooseMode::on_pushButton_LocalPVP_clicked()
     hide();
     game_typeForAll = MAN;
     QString str = ui->plainTextEdit->toPlainText();
-    QString str_size = ui->plainTextEdit_2->toPlainText();
+    //QString str_size = ui->plainTextEdit_2->toPlainText();
     if (!str.isEmpty()) {
         bool ok;
         str.toInt(&ok);
         if (ok)
             timelimit = str.toInt();
     }
-    if (!str_size.isEmpty()) {
+    /*if (!str_size.isEmpty()) {
         bool ok;
         str_size.toInt(&ok);
         if (ok)
             pvp_boardsize = str_size.toInt() + 1;
-    }
+    }*/
 }
 
 
@@ -62,5 +62,16 @@ void DialogChooseMode::on_pushButton_OnlinePVP_clicked()
     QMessageBox *warning = new QMessageBox(this);
     warning->warning(this,"Sorry","We're still designing this part!");
     delete warning;
+}
+
+
+void DialogChooseMode::on_comboBox_currentIndexChanged(int index)
+{
+    if(index == 0)
+     pvp_boardsize = 15;
+    if(index == 1)
+        pvp_boardsize = 12;
+    if(index == 2)
+        pvp_boardsize = 14;
 }
 
