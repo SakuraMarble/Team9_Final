@@ -9,8 +9,12 @@
 #include "QPainter"
 #include "QMouseEvent"
 #include <QTimer>
+#include <QTime>
 #include <QLabel>
 #include <QVBoxLayout>
+#include <QStandardPaths>
+#include <QDir>
+#include <QFileDialog>
 #include <nogo_ai.h>
 #include <dialogchoosemode.h>
 
@@ -39,6 +43,10 @@ private:
     QPushButton *disagreeBut;
     QString UserName;
 
+    QString documentPath;
+    QString subdirectory;
+    QDir dir;
+
     GameModel *game; // 游戏指针
     GameType game_type; // 存储游戏类型
 
@@ -51,9 +59,10 @@ private:
     int clickPosRow,clickPosCol; // 存储即将点击的位置
     bool selectPos = false; // 是否移动到合适的位置，以选中某个交叉点
     bool lose = false;//解决AI重开先后手问题
+    bool view_lose = false;//解决复现输赢
+    bool logs_empty = false;//存档文件夹是否为空
 
-    vector<info> Black_Log;
-    vector<info> White_Log;//记录对局的数组
+    vector<vector<info>> Logs;//记录对局的数组 0为白棋 1为黑棋
 
     // 绘制
     void paintEvent(QPaintEvent * event);
@@ -71,6 +80,8 @@ private:
     void timer_update();//重新倒计时
 
     void ask_keeplogs();//询问是否保存对局记录
+    void choose_logs();//View复现模式下选择本地存档
+
     void choosemode();//开局或重开选择模式&设置时间限制
 private slots:
     void on_pushButton_Surrender_clicked();//认输

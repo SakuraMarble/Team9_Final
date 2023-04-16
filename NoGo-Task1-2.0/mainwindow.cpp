@@ -2,8 +2,6 @@
 #include "ui_mainwindow.h"
 #include <math.h>
 #include <QMessageBox>
-#include <QStandardPaths>
-#include <QDir>
 #include "dialogchoosemode.h"
 MainWindow::MainWindow(QWidget *parent,QString username)
     : QMainWindow(parent),UserName(username), ui(new Ui::MainWindow)
@@ -24,6 +22,14 @@ MainWindow::MainWindow(QWidget *parent,QString username)
     ui->label_UserName->setText(UserName+"(You are the VIP)");
     }
     ui->statusbar->addPermanentWidget(ui->label_UserName);
+
+    Logs.resize(2);
+    documentPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);//Windows用户默认文档保存位置
+    subdirectory = "NoGo_Logs";
+    dir = QDir(documentPath + "/" + subdirectory);
+    if (!dir.exists())
+    dir.mkpath(".");
+
     initGame();
 
 }
@@ -135,17 +141,25 @@ void MainWindow::initGame()
     //NoGoAI = new ai;
     //创建消息框
     choosemode();
+
     initGameMode(game_type);
-    timer_init();
+    if (game_type != View)//复现模式下无需倒计时
+        timer_init();
+    if (game_type == View && logs_empty)
+        reGame();
 }
 
 void MainWindow::reGame()
 {
-    Black_Log.clear();
-    White_Log.clear();
+    //view_lose = false;
+    logs_empty = false;
     choosemode();
+
     initGameMode(game_type);
-    timer_update();
+    if (game_type != View)
+        timer_init();
+    if (game_type == View && logs_empty)
+        reGame();
 }
 
 void MainWindow::initGameMode(GameType type)
@@ -153,6 +167,8 @@ void MainWindow::initGameMode(GameType type)
     game->gameStatus = PLAYING;
     game->startGame(type);
     update();
+    if (game_type == View && !logs_empty)
+        QMessageBox::information (this, "Tips", "点击任意落子处复现下一步");
 }
 
 void MainWindow::mouseMoveEvent(QMouseEvent *event)
@@ -255,10 +271,10 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
     // 由人持黑子先来下棋
     chessOneByPerson();
     repaint();//立即调用paintEvent进行重绘
-    //update();
-    //paintEvent(NULL);
-    if (lose) {
+
+    if (lose || view_lose) {
         lose = false;//下一局的flag设置
+        view_lose = false;
         return;//玩家战败，AI无需再下棋
     }
     if (game_type == AI) { //人机模式
@@ -277,22 +293,58 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
 
 void MainWindow::chessOneByPerson()
 {
+    if (game_type == View) {
+        if (Logs[game->playerFlag].empty()) {
+            QString str;
+            if (game->playerFlag)
+                str = "The white"; //黑色无子白色赢！
+
+            else
+                str = "The black"; //白色无子黑色win！
+
+            QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
+            if (btnValue == QMessageBox::Ok) {
+                ask_keeplogs();//询问是否保存对局记录
+                view_lose = true;
+                //reGame();
+                //return;
+            }
+        }
+        else {
+            info now_move;
+            now_move = Logs[game->playerFlag].front();//顺序复现
+            if (Logs[game->playerFlag].size() == 1)
+                Logs[game->playerFlag].clear();
+            else
+                Logs[game->playerFlag].erase(Logs[game->playerFlag].begin());
+            if (now_move.first == 'G') {
+                on_pushButton_Surrender_clicked();
+                view_lose = true;
+                //return;//认输一步
+            }
+            else {
+                clickPosRow = now_move.first - 'A' + 1;
+                clickPosCol = now_move.second;
+            }
+        }
+    }
+
     // 根据当前存储的坐标下子
     // 只有有效点击才行，并且该处没有子
-    if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1)
+    if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1 && !view_lose)
     {
         // 在游戏的数据模型中落子
-        if (game->playerFlag)
-            Black_Log.push_back(make_pair(clickPosRow - 1 + 'A',clickPosCol));
-        else
-            White_Log.push_back(make_pair(clickPosRow - 1 + 'A',clickPosCol)); //记录对局信息
+        if (game_type != View)
+            Logs[game->playerFlag].emplace_back(make_pair(clickPosRow - 1 + 'A',clickPosCol));
+
         game->actionByPerson(clickPosRow, clickPosCol);//此处已换手
         // 播放落子音效，待实现；
         if (game->isLose(clickPosRow, clickPosCol) && game->gameStatus == PLAYING)
         {
             //qDebug() << "胜利"；
             game->gameStatus = DEAD;
-            timer->stop();//停止计时
+            if (game_type != View)
+                timer->stop();//停止计时
             //QSound::play(":sound/win.wav");
             QString str;
             if (game->gameMapVec[clickPosRow][clickPosCol] == 1)
@@ -309,30 +361,33 @@ void MainWindow::chessOneByPerson()
         }
 
         //update();
-        timer_update();//重新倒计时
+        if (game_type != View)
+            timer_update();//重新倒计时
     }
+    if (view_lose)
+        reGame();
 }
 
 void MainWindow::on_pushButton_Surrender_clicked()
 {
     game->gameStatus = DEAD;
-    timer->stop();//停止计时
+    if (game_type != View)
+        timer->stop();//停止计时
+    if (game_type != View)
+        Logs[game->playerFlag].emplace_back(make_pair('G',0));
+
     QString str;
-
-    if (game->playerFlag) {
+    if (game->playerFlag)
         str = "The white"; //黑色认输白色赢！
-        Black_Log.push_back(make_pair('G',0));
-    }
 
-    else {
+    else
         str = "The black"; //白色认输黑色win！
-        White_Log.push_back(make_pair('G',0));//记录认输
-    }
 
     QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
     if (btnValue == QMessageBox::Ok) {
         ask_keeplogs();//询问是否保存对局记录
-        reGame();
+        if (game_type != View)
+            reGame();
     }
 }
 
@@ -438,6 +493,9 @@ void MainWindow::choosemode()
         game->BOARD_GRAD_SIZE = 16;
         BOARD_GRAD_SIZE = 16;
     }
+    if (game_type == View)
+        choose_logs();
+
     // 设置窗口大小
     setFixedSize(
         MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE,
@@ -448,16 +506,11 @@ void MainWindow::choosemode()
 
 void MainWindow::ask_keeplogs()
 {
-    int res = QMessageBox::question(this, tr("Asking"), tr("Whether to keep logs?（If you choose Yes,you will save your logs in the default document location on windows.)"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认不保存
-    if (res == QMessageBox::Yes) {
-        //用户选择保存记录
 
-        QString documentPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-        QString subdirectory = "NoGo_Logs";
-        QDir dir(documentPath + "/" + subdirectory);
-        if (!dir.exists()) {
-            dir.mkpath(".");
-        }//在Windows用户保存文档的位置打开或创建NoGo_Logs文件夹
+    int res = QMessageBox::question(this, tr("Asking"), tr("Whether to keep logs?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认不保存
+    if (res == QMessageBox::Yes && game_type != View) {
+    
+        //用户选择保存记录
 
         auto now_time = std::chrono::system_clock::now();//获取时间
         auto timestamp = std::chrono::system_clock::to_time_t(now_time);//转换成本地时间
@@ -468,20 +521,15 @@ void MainWindow::ask_keeplogs()
         std::ofstream out(filepath.toStdString());
 
         if (out.is_open()) {
-            for (const auto& p : Black_Log) {
-                if (!p.second && p.first == 'G')//认输记录为"G0" 按要求只输出'G'
-                    out << p.first << ' ';
-                else
-                    out << p.first << p.second << ' ';
+            for (int i = 1;i >= 0;i--) {
+                for (const auto& p : Logs[i]) {
+                    if (!p.second && p.first == 'G')//认输记录为"G0" 按要求只输出'G'
+                        out << p.first << ' ';
+                    else
+                        out << p.first << p.second << ' ';
+                }
+                out << std::endl;//代表一方记录输出结束
             }
-            out << std::endl;//代表一方记录输出结束
-            for (const auto& p : White_Log) {
-                if (!p.second && p.first == 'G')
-                    out << p.first << ' ';
-                else
-                    out << p.first << p.second << ' ';
-            }
-            out << std::endl;//代表一方记录输出结束
             out.close();
 
             QMessageBox::information(this, tr("Done!"), tr("Your logs have been saved!"));
@@ -495,6 +543,56 @@ void MainWindow::ask_keeplogs()
     else {
         //不保存
     }
-    Black_Log.clear();
-    White_Log.clear();//清空记录
+
+    for (int i = 0;i <= 1;i++) {
+        if (!Logs[i].empty())
+            Logs[i].clear();
+    }
+    //清空记录
+}
+
+void MainWindow::choose_logs()
+{
+    QString selectedFilePath = QFileDialog::getOpenFileName(this, "Select Log File", dir.absolutePath(), "Text Files (*.txt)");
+    QStringList filter;
+    filter << "*.txt";
+    QFileInfoList fileList = dir.entryInfoList(filter, QDir::Files);
+    if (fileList.isEmpty()) {
+        QMessageBox::warning(nullptr, "Oops!", "No log file found");
+        logs_empty = true;
+        return;
+    }
+    else {
+        //QString selectedFilePath = QFileDialog::getOpenFileName(this, "Select Log File", dir.absolutePath(), "*.txt");
+        qDebug() << selectedFilePath;
+        if (!selectedFilePath.isEmpty()) {
+            std::ifstream in(selectedFilePath.toStdString());
+            if (!in) {
+                QMessageBox::warning(this, "Warning", "Failed to open log file.");
+            }
+            // 读取文件内容
+            else {
+                std::string line;
+                for (int i = 1;i >= 0;i--) {
+                    std::getline(in, line);
+                    std::stringstream tmp(line);
+                    char first;
+                    int second;
+                    while(tmp >> first >> second)
+                        Logs[i].emplace_back(first, second);
+                }//第一行为黑棋记录，第二行为白棋记录
+                in.close();
+                std::cout << "Read log file successfully." << std::endl;
+                std::cout << "Black player's moves:" << std::endl;
+                for (const auto& move : Logs[1]) {
+                    std::cout << move.first << move.second << std::endl;
+                }
+                std::cout << "White player's moves:" << std::endl;
+                for (const auto& move : Logs[0]) {
+                    std::cout << move.first << move.second << std::endl;
+                }
+            }
+        }
+
+    }
 }

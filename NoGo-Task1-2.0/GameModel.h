@@ -10,7 +10,8 @@ enum GameType
 {
     MAN,
     AI,
-    Online
+    Online,
+    View//复现对局模式
 };
 
 //游戏状态
