@@ -294,7 +294,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
 void MainWindow::chessOneByPerson()
 {
     if (game_type == View) {
-        if (Logs[game->playerFlag].empty()) {
+        if (Logs[game->playerFlag].empty()) {//认输编码'G'不会读入，等效无子
             QString str;
             if (game->playerFlag)
                 str = "The white"; //黑色无子白色赢！
@@ -317,15 +317,15 @@ void MainWindow::chessOneByPerson()
                 Logs[game->playerFlag].clear();
             else
                 Logs[game->playerFlag].erase(Logs[game->playerFlag].begin());
-            if (now_move.first == 'G') {
+            /*if (now_move.first == 'G' && !now_move.second) {
                 on_pushButton_Surrender_clicked();
                 view_lose = true;
                 //return;//认输一步
-            }
-            else {
-                clickPosRow = now_move.first - 'A' + 1;
-                clickPosCol = now_move.second;
-            }
+            }*/
+            //else {
+            clickPosRow = now_move.first - 'A' + 1;
+            clickPosCol = now_move.second;
+            //}
         }
     }
 
@@ -339,6 +339,7 @@ void MainWindow::chessOneByPerson()
 
         game->actionByPerson(clickPosRow, clickPosCol);//此处已换手
         // 播放落子音效，待实现；
+
         if (game->isLose(clickPosRow, clickPosCol) && game->gameStatus == PLAYING)
         {
             //qDebug() << "胜利"；
@@ -490,8 +491,8 @@ void MainWindow::choosemode()
         BOARD_GRAD_SIZE = game->BOARD_GRAD_SIZE;
     }
     else {
-        game->BOARD_GRAD_SIZE = 16;
-        BOARD_GRAD_SIZE = 16;
+        game->BOARD_GRAD_SIZE = 10;
+        BOARD_GRAD_SIZE = 10;
     }
     if (game_type == View)
         choose_logs();
@@ -530,6 +531,7 @@ void MainWindow::ask_keeplogs()
                 }
                 out << std::endl;//代表一方记录输出结束
             }
+            out << BOARD_GRAD_SIZE << endl;
             out.close();
 
             QMessageBox::information(this, tr("Done!"), tr("Your logs have been saved!"));
@@ -581,6 +583,10 @@ void MainWindow::choose_logs()
                     while(tmp >> first >> second)
                         Logs[i].emplace_back(first, second);
                 }//第一行为黑棋记录，第二行为白棋记录
+                std::getline(in,line);
+                std::stringstream tmp(line);
+                tmp >> BOARD_GRAD_SIZE;
+                game->BOARD_GRAD_SIZE = BOARD_GRAD_SIZE;//第三行为棋盘路数
                 in.close();
                 std::cout << "Read log file successfully." << std::endl;
                 std::cout << "Black player's moves:" << std::endl;

@@ -30,9 +30,9 @@
    <property name="geometry">
     <rect>
      <x>190</x>
-     <y>150</y>
+     <y>141</y>
      <width>201</width>
-     <height>101</height>
+     <height>121</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -76,13 +76,13 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>190</x>
-     <y>60</y>
+     <y>30</y>
      <width>201</width>
-     <height>61</height>
+     <height>95</height>
     </rect>
    </property>
    <layout class="QFormLayout" name="formLayout">
