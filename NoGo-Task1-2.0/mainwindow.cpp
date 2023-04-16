@@ -2,8 +2,6 @@
 #include "ui_mainwindow.h"
 #include <math.h>
 #include <QMessageBox>
-#include <QStandardPaths>
-#include <QDir>
 #include "dialogchoosemode.h"
 MainWindow::MainWindow(QWidget *parent,QString username)
     : QMainWindow(parent),UserName(username), ui(new Ui::MainWindow)
@@ -24,7 +22,14 @@ MainWindow::MainWindow(QWidget *parent,QString username)
     ui->label_UserName->setText(UserName+"(You are the VIP)");
     }
     ui->statusbar->addPermanentWidget(ui->label_UserName);
+
     Logs.resize(2);
+    documentPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);//Windows用户默认文档保存位置
+    subdirectory = "NoGo_Logs";
+    dir = QDir(documentPath + "/" + subdirectory);
+    if (!dir.exists())
+    dir.mkpath(".");
+
     initGame();
 
 }
@@ -273,7 +278,7 @@ void MainWindow::chessOneByPerson()
     if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1)
     {
         // 在游戏的数据模型中落子
-        Logs[game->playerFlag].push_back(make_pair(clickPosRow - 1 + 'A',clickPosCol));
+        Logs[game->playerFlag].emplace_back(make_pair(clickPosRow - 1 + 'A',clickPosCol));
 
         game->actionByPerson(clickPosRow, clickPosCol);//此处已换手
         // 播放落子音效，待实现；
@@ -306,7 +311,7 @@ void MainWindow::on_pushButton_Surrender_clicked()
 {
     game->gameStatus = DEAD;
     timer->stop();//停止计时
-    Logs[game->playerFlag].push_back(make_pair('G',0));
+    Logs[game->playerFlag].emplace_back(make_pair('G',0));
     QString str;
 
     if (game->playerFlag)
@@ -418,6 +423,8 @@ void MainWindow::choosemode()
         game->BOARD_GRAD_SIZE = 16;
         BOARD_GRAD_SIZE = 16;
     }
+    if (game_type == View)
+        choose_logs();
     // 设置窗口大小
     setFixedSize(
         MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE,
@@ -431,13 +438,6 @@ void MainWindow::ask_keeplogs()
     int res = QMessageBox::question(this, tr("Asking"), tr("Whether to keep logs?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认不保存
     if (res == QMessageBox::Yes) {
         //用户选择保存记录
-
-        QString documentPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-        QString subdirectory = "NoGo_Logs";
-        QDir dir(documentPath + "/" + subdirectory);
-        if (!dir.exists()) {
-            dir.mkpath(".");
-        }//在windows用户默认文档保存目录打开或创建NoGo_Logs文件夹
 
         auto now_time = std::chrono::system_clock::now();//获取时间
         auto timestamp = std::chrono::system_clock::to_time_t(now_time);//转换成本地时间
@@ -472,4 +472,49 @@ void MainWindow::ask_keeplogs()
     }
     Logs[0].clear();
     Logs[1].clear();//清空记录
+}
+
+void MainWindow::choose_logs()
+{
+    QString selectedFilePath = QFileDialog::getOpenFileName(this, "Select Log File", dir.absolutePath(), "Text Files (*.txt)");
+    QStringList filter;
+    filter << "*.txt";
+    QFileInfoList fileList = dir.entryInfoList(filter, QDir::Files);
+    if (fileList.isEmpty()) {
+        QMessageBox::warning(nullptr, "Oops!", "No log file found");
+        return;
+    }
+    else {
+        QString selectedFilePath = QFileDialog::getOpenFileName(this, "Select Log File", dir.absolutePath(), "*.txt");
+        qDebug() << selectedFilePath;
+        if (!selectedFilePath.isEmpty()) {
+            std::ifstream in(selectedFilePath.toStdString());
+            if (!in) {
+                QMessageBox::warning(this, "Warning", "Failed to open log file.");
+            }
+            // 读取文件内容
+            else {
+                std::string line;
+                for (int i = 1;i >= 0;i--) {
+                    std::getline(in, line);
+                    std::stringstream tmp(line);
+                    char first;
+                    int second;
+                    while(tmp >> first >> second)
+                        Logs[i].emplace_back(first, second);
+                }//第一行为黑棋记录，第二行为白棋记录
+                in.close();
+                std::cout << "Read log file successfully." << std::endl;
+                std::cout << "Black player's moves:" << std::endl;
+                for (const auto& move : Logs[1]) {
+                    std::cout << move.first << move.second << std::endl;
+                }
+                std::cout << "White player's moves:" << std::endl;
+                for (const auto& move : Logs[0]) {
+                    std::cout << move.first << move.second << std::endl;
+                }
+            }
+        }
+
+    }
 }

@@ -44,6 +44,13 @@
      </widget>
     </item>
     <item>
+     <widget class="QPushButton" name="pushButton_View">
+      <property name="text">
+       <string>View Logs</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QPushButton" name="pushButton_PVE">
       <property name="text">
        <string>PVE</string>

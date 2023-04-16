@@ -25,6 +25,8 @@ private slots:
 
     void on_pushButton_OnlinePVP_clicked();
 
+    void on_pushButton_View_clicked();
+
 private:
     GameType game_typeForAll;
     int pvp_boardsize = 16;

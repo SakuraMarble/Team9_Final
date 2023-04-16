@@ -33,7 +33,11 @@ void DialogChooseMode::on_pushButton_PVE_clicked()
     }
 }
 
-
+void DialogChooseMode::on_pushButton_View_clicked()
+{
+    hide();
+    game_typeForAll = View;
+}
 
 void DialogChooseMode::on_pushButton_LocalPVP_clicked()
 {
