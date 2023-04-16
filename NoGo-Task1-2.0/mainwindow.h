@@ -26,7 +26,6 @@ QT_END_NAMESPACE
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
 public:
     MainWindow(QWidget *parent = nullptr,QString username = "passerby");
     ~MainWindow();
@@ -84,7 +83,6 @@ private:
     void choose_logs();//View复现模式下选择本地存档
 
     void choosemode();//开局或重开选择模式&设置时间限制
-
 private slots:
     void on_pushButton_Surrender_clicked();//认输
     void TimerCount();//一秒一刷新

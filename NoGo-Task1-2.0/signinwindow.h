@@ -10,7 +10,6 @@ class SignInWindow;
 class SignInWindow : public QMainWindow
 {
     Q_OBJECT
-
 public:
     explicit SignInWindow(QWidget *parent = nullptr);
     ~SignInWindow();
