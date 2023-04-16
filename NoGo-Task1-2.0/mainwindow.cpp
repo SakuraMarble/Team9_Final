@@ -133,15 +133,25 @@ void MainWindow::initGame()
     //NoGoAI = new ai;
     //创建消息框
     choosemode();
+
     initGameMode(game_type);
-    timer_init();
+    if (game_type != View)//复现模式下无需倒计时
+        timer_init();
+    if (game_type == View && logs_empty)
+        reGame();
 }
 
 void MainWindow::reGame()
 {
+    //view_lose = false;
+    logs_empty = false;
     choosemode();
+
     initGameMode(game_type);
-    timer_update();
+    if (game_type != View)
+        timer_init();
+    if (game_type == View && logs_empty)
+        reGame();
 }
 
 void MainWindow::initGameMode(GameType type)
@@ -149,6 +159,8 @@ void MainWindow::initGameMode(GameType type)
     game->gameStatus = PLAYING;
     game->startGame(type);
     update();
+    if (game_type == View && !logs_empty)
+        QMessageBox::information (this, "Tips", "点击任意落子处复现下一步");
 }
 
 void MainWindow::mouseMoveEvent(QMouseEvent *event)
@@ -251,10 +263,10 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
     // 由人持黑子先来下棋
     chessOneByPerson();
     repaint();//立即调用paintEvent进行重绘
-    //update();
-    //paintEvent(NULL);
-    if (lose) {
+
+    if (lose || view_lose) {
         lose = false;//下一局的flag设置
+        view_lose = false;
         return;//玩家战败，AI无需再下棋
     }
     if (game_type == AI) { //人机模式
@@ -273,12 +285,49 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
 
 void MainWindow::chessOneByPerson()
 {
+    if (game_type == View) {
+        if (Logs[game->playerFlag].empty()) {
+            QString str;
+            if (game->playerFlag)
+                str = "The white"; //黑色无子白色赢！
+
+            else
+                str = "The black"; //白色无子黑色win！
+
+            QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
+            if (btnValue == QMessageBox::Ok) {
+                ask_keeplogs();//询问是否保存对局记录
+                view_lose = true;
+                //reGame();
+                //return;
+            }
+        }
+        else {
+            info now_move;
+            now_move = Logs[game->playerFlag].front();//顺序复现
+            if (Logs[game->playerFlag].size() == 1)
+                Logs[game->playerFlag].clear();
+            else
+                Logs[game->playerFlag].erase(Logs[game->playerFlag].begin());
+            if (now_move.first == 'G') {
+                on_pushButton_Surrender_clicked();
+                view_lose = true;
+                //return;//认输一步
+            }
+            else {
+                clickPosRow = now_move.first - 'A' + 1;
+                clickPosCol = now_move.second;
+            }
+        }
+    }
+
     // 根据当前存储的坐标下子
     // 只有有效点击才行，并且该处没有子
-    if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1)
+    if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1 && !view_lose)
     {
         // 在游戏的数据模型中落子
-        Logs[game->playerFlag].emplace_back(make_pair(clickPosRow - 1 + 'A',clickPosCol));
+        if (game_type != View)
+            Logs[game->playerFlag].emplace_back(make_pair(clickPosRow - 1 + 'A',clickPosCol));
 
         game->actionByPerson(clickPosRow, clickPosCol);//此处已换手
         // 播放落子音效，待实现；
@@ -286,7 +335,8 @@ void MainWindow::chessOneByPerson()
         {
             //qDebug() << "胜利"；
             game->gameStatus = DEAD;
-            timer->stop();//停止计时
+            if (game_type != View)
+                timer->stop();//停止计时
             //QSound::play(":sound/win.wav");
             QString str;
             if (game->gameMapVec[clickPosRow][clickPosCol] == 1)
@@ -303,17 +353,22 @@ void MainWindow::chessOneByPerson()
         }
 
         //update();
-        timer_update();//重新倒计时
+        if (game_type != View)
+            timer_update();//重新倒计时
     }
+    if (view_lose)
+        reGame();
 }
 
 void MainWindow::on_pushButton_Surrender_clicked()
 {
     game->gameStatus = DEAD;
-    timer->stop();//停止计时
-    Logs[game->playerFlag].emplace_back(make_pair('G',0));
-    QString str;
+    if (game_type != View)
+        timer->stop();//停止计时
+    if (game_type != View)
+        Logs[game->playerFlag].emplace_back(make_pair('G',0));
 
+    QString str;
     if (game->playerFlag)
         str = "The white"; //黑色认输白色赢！
 
@@ -323,7 +378,8 @@ void MainWindow::on_pushButton_Surrender_clicked()
     QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
     if (btnValue == QMessageBox::Ok) {
         ask_keeplogs();//询问是否保存对局记录
-        reGame();
+        if (game_type != View)
+            reGame();
     }
 }
 
@@ -425,6 +481,7 @@ void MainWindow::choosemode()
     }
     if (game_type == View)
         choose_logs();
+
     // 设置窗口大小
     setFixedSize(
         MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE,
@@ -436,7 +493,7 @@ void MainWindow::choosemode()
 void MainWindow::ask_keeplogs()
 {
     int res = QMessageBox::question(this, tr("Asking"), tr("Whether to keep logs?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认不保存
-    if (res == QMessageBox::Yes) {
+    if (res == QMessageBox::Yes && game_type != View) {
         //用户选择保存记录
 
         auto now_time = std::chrono::system_clock::now();//获取时间
@@ -470,8 +527,12 @@ void MainWindow::ask_keeplogs()
     else {
         //不保存
     }
-    Logs[0].clear();
-    Logs[1].clear();//清空记录
+
+    for (int i = 0;i <= 1;i++) {
+        if (!Logs[i].empty())
+            Logs[i].clear();
+    }
+    //清空记录
 }
 
 void MainWindow::choose_logs()
@@ -482,10 +543,11 @@ void MainWindow::choose_logs()
     QFileInfoList fileList = dir.entryInfoList(filter, QDir::Files);
     if (fileList.isEmpty()) {
         QMessageBox::warning(nullptr, "Oops!", "No log file found");
+        logs_empty = true;
         return;
     }
     else {
-        QString selectedFilePath = QFileDialog::getOpenFileName(this, "Select Log File", dir.absolutePath(), "*.txt");
+        //QString selectedFilePath = QFileDialog::getOpenFileName(this, "Select Log File", dir.absolutePath(), "*.txt");
         qDebug() << selectedFilePath;
         if (!selectedFilePath.isEmpty()) {
             std::ifstream in(selectedFilePath.toStdString());

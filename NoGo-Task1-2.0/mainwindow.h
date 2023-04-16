@@ -9,6 +9,7 @@
 #include "QPainter"
 #include "QMouseEvent"
 #include <QTimer>
+#include <QTime>
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QStandardPaths>
@@ -59,6 +60,8 @@ private:
     int clickPosRow,clickPosCol; // 存储即将点击的位置
     bool selectPos = false; // 是否移动到合适的位置，以选中某个交叉点
     bool lose = false;//解决AI重开先后手问题
+    bool view_lose = false;//解决复现输赢
+    bool logs_empty = false;//存档文件夹是否为空
 
     vector<vector<info>> Logs;//记录对局的数组 0为白棋 1为黑棋
 
