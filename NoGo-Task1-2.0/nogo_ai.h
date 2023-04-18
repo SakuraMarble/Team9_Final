@@ -26,5 +26,6 @@ class ai{
 public:
     bool ai_check(brd &board,int size);
     pii run(brd &board,int use,int size);
+    int get_possi(brd&board,int use,int size);
 };
 #endif
