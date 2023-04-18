@@ -49,17 +49,20 @@ void MainWindow::paintEvent(QPaintEvent * event)
     QPainter paint(this);
     paint.drawPixmap(0, 0, pixmap);
     QWidget::paintEvent(event);
+    ai newai;
     if(game_type == MAN)
     {
         if(game->playerFlag == true)
         {
             ui->statusbar->setStyleSheet("font-size:23px;color:black;");
             ui->statusbar->showMessage("Black is thinking...");
+            ui->label_possible->setText("Black Advantage:"+QString::number(newai.get_possi(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE)));
         } else {
             ui->statusbar->setStyleSheet("font-size:23px;color:white;");
             ui->label_UserName->setStyleSheet("color:black;");
             ui->label_UserNameNotion->setStyleSheet("color:black;");
             ui->statusbar->showMessage("White is thinking...");
+            ui->label_possible->setText("White Advantage:"+QString::number(newai.get_possi(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE)));
         }
     }
     if(game_type == AI)
@@ -68,11 +71,13 @@ void MainWindow::paintEvent(QPaintEvent * event)
         {
             ui->statusbar->setStyleSheet("font-size:23px;color:black;");
             ui->statusbar->showMessage("Black is thinking...");
+            ui->label_possible->setText("Black Advantage:"+QString::number(newai.get_possi(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE)));
         } else {
             ui->statusbar->setStyleSheet("font-size:23px;color:white;");
             ui->label_UserName->setStyleSheet("color:black;");
             ui->label_UserNameNotion->setStyleSheet("color:black;");
             ui->statusbar->showMessage("White(AI) is thinking...");
+            ui->label_possible->setText("AI Advantage:"+QString::number(newai.get_possi(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE)));
         }
     }
     QPainter painter(this);
@@ -618,6 +623,6 @@ void MainWindow::choose_logs()
                 }
             }
         }
-
+        else logs_empty = true;
     }
 }

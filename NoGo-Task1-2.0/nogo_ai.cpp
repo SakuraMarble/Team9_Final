@@ -104,3 +104,6 @@ pii ai::run(brd &board,int use,int size){
                 }
         return make_pair(x,y);
     }
+int ai::get_possi(brd &board,int use,int size){
+    return ai_calc(board,use,size)/100;
+}
