@@ -39,7 +39,7 @@ public:
     int group[2][group_size];
     int rank[2][group_size];
     int direction[4][2] = {{1,0},{-1,0},{0,1},{0,-1}};
-    int BOARD_GRAD_SIZE = 16;//棋盘尺寸
+    int BOARD_GRAD_SIZE = 10;//棋盘尺寸
     //存储当前游戏棋盘和棋子的情况，空白为-1，黑子1，白子0
     std::vector<std::vector<int>> gameMapVec;
 
@@ -52,6 +52,16 @@ public:
     GameType gameType; //游戏模式：PVPorPVE
 
     GameStatus gameStatus; //游戏状态
+
+    int totalSteps = 0;
+
+    int totalTime = 0;
+
+    int totalTime_black = 0;
+    int totalTime_white = 0;
+
+    int totalSteps_black = 0;
+    int totalSteps_white = 0;
 
     void startGame(GameType type); // 确定游戏模式，开始游戏
 

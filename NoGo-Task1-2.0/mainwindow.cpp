@@ -164,6 +164,8 @@ void MainWindow::reGame()
 
 void MainWindow::initGameMode(GameType type)
 {
+    game->totalSteps=0;
+    game->totalTime=0;
     game->gameStatus = PLAYING;
     game->startGame(type);
     update();
@@ -298,10 +300,8 @@ void MainWindow::chessOneByPerson()
             QString str;
             if (game->playerFlag)
                 str = "The white"; //黑色无子白色赢！
-
             else
                 str = "The black"; //白色无子黑色win！
-
             QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
             if (btnValue == QMessageBox::Ok) {
                 ask_keeplogs();//询问是否保存对局记录
@@ -325,6 +325,7 @@ void MainWindow::chessOneByPerson()
             //else {
             clickPosRow = now_move.first - 'A' + 1;
             clickPosCol = now_move.second;
+
             //}
         }
     }
@@ -333,6 +334,11 @@ void MainWindow::chessOneByPerson()
     // 只有有效点击才行，并且该处没有子
     if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1 && !view_lose)
     {
+        game->totalSteps++;
+        if(game->playerFlag == true)
+            game->totalSteps_black++;
+        if(game->playerFlag == false)
+            game->totalSteps_white++;
         // 在游戏的数据模型中落子
         if (game_type != View)
             Logs[game->playerFlag].emplace_back(make_pair(clickPosRow - 1 + 'A',clickPosCol));
@@ -354,7 +360,9 @@ void MainWindow::chessOneByPerson()
                 str = "The black";
             lose = true;//用于对局return
 
-            QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
+        QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
+                                                                         +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
+                                                                         +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
             if (btnValue == QMessageBox::Ok) {
                 ask_keeplogs();//询问是否保存对局记录
                 reGame();
@@ -371,12 +379,12 @@ void MainWindow::chessOneByPerson()
 
 void MainWindow::on_pushButton_Surrender_clicked()
 {
+    game->totalSteps++;
     game->gameStatus = DEAD;
     if (game_type != View)
         timer->stop();//停止计时
     if (game_type != View)
         Logs[game->playerFlag].emplace_back(make_pair('G',0));
-
     QString str;
     if (game->playerFlag)
         str = "The white"; //黑色认输白色赢！
@@ -384,7 +392,9 @@ void MainWindow::on_pushButton_Surrender_clicked()
     else
         str = "The black"; //白色认输黑色win！
 
-    QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
+    QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
+                                                                     +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
+                                                                     +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
     if (btnValue == QMessageBox::Ok) {
         ask_keeplogs();//询问是否保存对局记录
         if (game_type != View)
@@ -410,6 +420,11 @@ void MainWindow::timer_init()
 
 void MainWindow::TimerCount()
 {
+    game->totalTime++;
+    if(game->playerFlag == true)
+        game->totalTime_black++;
+    if(game->playerFlag == false)
+        game->totalTime_white++;
     TimerCountNumber--;//1s过去了
     countlabel->setText("Remaining time:"+QString::number(TimerCountNumber));//刷新倒计时
     countlabel->adjustSize();
@@ -443,7 +458,9 @@ void MainWindow::timelimit_exceeded()
     else
         str = "The black"; //白色TL黑色win！
 
-    QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", "You have exceeded the time limit," + str + " wins！");
+    QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
+                                                                     +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
+                                                                     +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
     if (btnValue == QMessageBox::Ok) {
         ask_keeplogs();//询问是否保存对局记录
         reGame();
@@ -470,7 +487,9 @@ void MainWindow::on_pushButton_Cheating_clicked()
         timer->stop();//停止计时
         QString str = "The black";
         lose = true;//用于对局return
-        QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
+        QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
+                                                                         +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
+                                                                         +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
         if (btnValue == QMessageBox::Ok)
             reGame();
     }else{
