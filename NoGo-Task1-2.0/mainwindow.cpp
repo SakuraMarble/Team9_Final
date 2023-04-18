@@ -589,6 +589,11 @@ void MainWindow::choose_logs()
         return;
     }
     else {
+        if (selectedFilePath.isEmpty()) {
+            QMessageBox::warning(nullptr, "Oops!", "No log file selected");
+            logs_empty = true;
+            return;
+        }
         //QString selectedFilePath = QFileDialog::getOpenFileName(this, "Select Log File", dir.absolutePath(), "*.txt");
         qDebug() << selectedFilePath;
         if (!selectedFilePath.isEmpty()) {
