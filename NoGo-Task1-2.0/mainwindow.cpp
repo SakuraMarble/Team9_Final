@@ -604,6 +604,6 @@ void MainWindow::choose_logs()
                 }
             }
         }
-
+        else logs_empty = true;
     }
 }
