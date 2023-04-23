@@ -118,6 +118,15 @@ void MainWindow::paintEvent(QPaintEvent * event)
     for (int i = 0; i < BOARD_GRAD_SIZE; i++)
         for (int j = 0; j < BOARD_GRAD_SIZE; j++)
         {
+            if(game->totalSteps>0&&i==lastx&&j==lasty){
+                QLinearGradient gradient(MARGIN + BLOCK_SIZE * j - 1.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * i - 1.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * j , MARGIN + BLOCK_SIZE * i);
+
+                gradient.setColorAt(1, QColor(0, 255, 0));
+                gradient.setColorAt(0, QColor(255,0,0));
+                painter.setBrush(gradient);
+                painter.drawEllipse(MARGIN + BLOCK_SIZE * j - CHESS_RADIUS*1.2,MARGIN + BLOCK_SIZE * i - CHESS_RADIUS*1.2,CHESS_RADIUS * 2.4,CHESS_RADIUS * 2.4);
+
+            }
             if (game->gameMapVec[i][j] == 1)
             {
                 QLinearGradient gradient(MARGIN + BLOCK_SIZE * j - 1.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * i - 1.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * j , MARGIN + BLOCK_SIZE * i);
@@ -347,7 +356,8 @@ void MainWindow::chessOneByPerson()
         // 在游戏的数据模型中落子
         if (game_type != View)
             Logs[game->playerFlag].emplace_back(make_pair(clickPosRow - 1 + 'A',clickPosCol));
-
+        lastx=clickPosRow;
+        lasty=clickPosCol;
         game->actionByPerson(clickPosRow, clickPosCol);//此处已换手
         // 播放落子音效，待实现；
 

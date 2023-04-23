@@ -51,7 +51,7 @@ private:
     GameType game_type; // 存储游戏类型
 
     //ai *NoGoAI;
-
+    int lastx,lasty;
     int TimerCountNumber;
     int TimerLimit = 30;//后期可在软件内设置
     int BOARD_GRAD_SIZE = 10;
