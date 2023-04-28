@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 10.0.0, 2023-04-28T17:02:32. -->
+<<<<<<< Updated upstream
+<!-- Written by QtCreator 9.0.1, 2023-04-18T13:38:31. -->
+=======
+<!-- Written by QtCreator 10.0.0, 2023-04-16T14:53:57. -->
+>>>>>>> Stashed changes
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
