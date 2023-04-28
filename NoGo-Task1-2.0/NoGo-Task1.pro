@@ -1,4 +1,5 @@
 QT       += core gui
+QT += network
 #QT       += multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -14,6 +15,9 @@ SOURCES += \
     dialogchoosemode.cpp \
     main.cpp \
     mainwindow.cpp \
+    networkdata.cpp \
+    networkserver.cpp \
+    networksocket.cpp \
     nogo_ai.cpp \
     signinwindow.cpp
 
@@ -21,6 +25,9 @@ HEADERS += \
     GameModel.h \
     dialogchoosemode.h \
     mainwindow.h \
+    networkdata.h \
+    networkserver.h \
+    networksocket.h \
     nogo_ai.h \
     signinwindow.h
 
