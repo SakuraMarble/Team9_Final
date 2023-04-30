@@ -12,6 +12,7 @@ CONFIG += c++17
 
 SOURCES += \
     GameModel.cpp \
+    connectdialog.cpp \
     dialogchoosemode.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -23,6 +24,7 @@ SOURCES += \
 
 HEADERS += \
     GameModel.h \
+    connectdialog.h \
     dialogchoosemode.h \
     mainwindow.h \
     networkdata.h \
@@ -32,6 +34,7 @@ HEADERS += \
     signinwindow.h
 
 FORMS += \
+    connectdialog.ui \
     dialogchoosemode.ui \
     mainwindow.ui \
     signinwindow.ui

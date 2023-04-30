@@ -181,7 +181,7 @@ void MainWindow::initGameMode(GameType type)
     game->totalSteps=0;
     game->totalTime=0;
     game->gameStatus = PLAYING;
-    game->startGame(type);
+    game->startGame(type,online_player_flag);
     update();
     if (game_type == View && !logs_empty)
         QMessageBox::information (this, "Tips", "点击任意落子处复现下一步");
@@ -530,6 +530,9 @@ void MainWindow::choosemode()
     }
     if (game_type == View)
         choose_logs();
+
+    if (game_type == Online)
+        online_player_flag = dialog->online_hold;
 
     // 设置窗口大小
     setFixedSize(

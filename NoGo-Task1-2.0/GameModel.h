@@ -47,7 +47,7 @@ public:
     std::vector<std::vector<int>> scoreMapVec;
 
     //标记下棋方，true:黑棋方 false：AI白棋方
-    bool playerFlag;
+    bool playerFlag = true;
 
     GameType gameType; //游戏模式：PVPorPVE
 
@@ -63,7 +63,7 @@ public:
     int totalSteps_black = 0;
     int totalSteps_white = 0;
 
-    void startGame(GameType type); // 确定游戏模式，开始游戏
+    void startGame(GameType type, bool player_flag = true); // 确定游戏模式，开始游戏
 
     void actionByPerson(int row, int col); // 人执行下棋
     void updateGameMap(int row, int col);  // 更新第几行第几列的数据
