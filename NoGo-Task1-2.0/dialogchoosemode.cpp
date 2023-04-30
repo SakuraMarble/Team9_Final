@@ -63,9 +63,19 @@ void DialogChooseMode::on_pushButton_LocalPVP_clicked()
 
 void DialogChooseMode::on_pushButton_OnlinePVP_clicked()
 {
-    QMessageBox *warning = new QMessageBox(this);
+    /*QMessageBox *warning = new QMessageBox(this);
     warning->warning(this,"Sorry","We're still designing this part!");
-    delete warning;
+    delete warning;*/
+    hide();
+    ConnectDialog *dialog = new ConnectDialog(this);
+    dialog->exec();
+    ip = dialog->get_ip();
+    port = dialog->get_port();
+    online_hold = dialog->get_hold();
+    cout << online_hold << endl;
+    game_typeForAll = Online;
+    delete dialog;
+
 }
 
 

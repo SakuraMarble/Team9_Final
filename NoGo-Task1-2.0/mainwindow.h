@@ -61,6 +61,7 @@ private:
     bool lose = false;//解决AI重开先后手问题
     bool view_lose = false;//解决复现输赢
     bool logs_empty = false;//存档文件夹是否为空
+    bool online_player_flag = true;//联机对战持有棋子颜色
 
     vector<vector<info>> Logs;//记录对局的数组 0为白棋 1为黑棋
 

@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <GameModel.h>
+#include <connectdialog.h>
 
 namespace Ui {
 class DialogChooseMode;
@@ -35,6 +36,9 @@ private:
     GameType game_typeForAll;
     int pvp_boardsize = 10;
     int timelimit = 30;
+    QString ip;
+    quint16 port;
+    bool online_hold = true;
     Ui::DialogChooseMode *ui;
 };
 
