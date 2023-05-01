@@ -67,7 +67,7 @@ void DialogChooseMode::on_pushButton_OnlinePVP_clicked()
     warning->warning(this,"Sorry","We're still designing this part!");
     delete warning;*/
     hide();
-    ConnectDialog *dialog = new ConnectDialog(this);
+    ConnectDialog *dialog = new ConnectDialog(this);//询问联机对手ip与端口
     dialog->exec();
     ip = dialog->get_ip();
     port = dialog->get_port();

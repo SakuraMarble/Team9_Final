@@ -23,6 +23,19 @@ MainWindow::MainWindow(QWidget *parent,QString username)
     }
     ui->statusbar->addPermanentWidget(ui->label_UserName);
 
+    this->socket = new NetworkSocket(new QTcpSocket(), this);//新建客户端
+
+    connect(socket, &NetworkSocket::receive, this, &MainWindow::receive_fromServer);
+    connect(socket->base(), &QAbstractSocket::disconnected, [=]() {
+        QMessageBox::critical(this, tr("Connection lost"), tr("Connection to server has closed"));
+    });
+    connect(socket->base(), &QAbstractSocket::errorOccurred, this, &MainWindow::displayError);
+    connect(socket->base(), &QAbstractSocket::connected, this, &MainWindow::connected);
+
+    this->server = new NetworkServer(this);//新建服务端
+
+    connect(this->server, &NetworkServer::receive, this, &MainWindow::receiveData);
+
     Logs.resize(2);
     documentPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);//Windows用户默认文档保存位置
     subdirectory = "NoGo_Logs";
@@ -156,8 +169,15 @@ void MainWindow::initGame()
     //创建消息框
     choosemode();
 
-    initGameMode(game_type);
-    if (game_type != View)//复现模式下无需倒计时
+    if (game_type != Online)
+        initGameMode(game_type);//Online模式下 主动联机收到READY_OP之后开始游戏 reGame同理
+
+    else {
+        socket->hello(opp_ip,opp_port);//主动发起联机
+        socket->base()->waitForConnected(5000);
+    }
+
+    if (game_type != View && game_type != Online)//复现模式下无需倒计时 联机模式确认开始再计时
         timer_init();
     if (game_type == View && logs_empty)
         reGame();
@@ -167,10 +187,18 @@ void MainWindow::reGame()
 {
     //view_lose = false;
     logs_empty = false;
+    online_failure = false;
     choosemode();
 
-    initGameMode(game_type);
-    if (game_type != View)
+    if (game_type != Online)
+        initGameMode(game_type);
+
+    else {
+        socket->hello(opp_ip,opp_port);//主动发起联机
+        socket->base()->waitForConnected(5000);
+    }
+
+    if (game_type != View && game_type != Online)
         timer_init();
     if (game_type == View && logs_empty)
         reGame();
@@ -183,6 +211,7 @@ void MainWindow::initGameMode(GameType type)
     game->gameStatus = PLAYING;
     game->startGame(type,online_player_flag);
     update();
+
     if (game_type == View && !logs_empty)
         QMessageBox::information (this, "Tips", "点击任意落子处复现下一步");
 }
@@ -284,6 +313,12 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
         selectPos = false;
     }
 
+    if (game->gameType == Online && online_player_flag == game->playerFlag) {
+        chessOneOnline();
+        return;
+    }
+    if (game->gameType == Online && online_player_flag != game->playerFlag)//不是用户下棋的时机
+        return;
     // 由人持黑子先来下棋
     chessOneByPerson();
     repaint();//立即调用paintEvent进行重绘
@@ -365,6 +400,16 @@ void MainWindow::chessOneByPerson()
         {
             //qDebug() << "胜利"；
             game->gameStatus = DEAD;
+            if (game_type == Online && online_player_flag == game->playerFlag) {//胜者发送
+                NetworkData suicide(OPCODE::SUICIDE_END_OP,UserName,"You have suicided!");
+                if (!online_agreed)
+                    socket->send(suicide);
+                else
+                    server->send(Clients.front(),suicide);
+            }
+
+            if (game_type == Online && online_player_flag != game->playerFlag)
+                online_failure = true;//是己方输了
             if (game_type != View)
                 timer->stop();//停止计时
             //QSound::play(":sound/win.wav");
@@ -392,6 +437,21 @@ void MainWindow::chessOneByPerson()
         reGame();
 }
 
+void MainWindow::chessOneOnline()
+{
+    if (online_player_flag == game->playerFlag) { //轮到己方下棋
+        if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1 && !view_lose)
+        {
+            NetworkData move = NetworkData(OPCODE::MOVE_OP,index_encode(clickPosRow,clickPosCol),"");
+            if (!online_agreed)
+                socket->send(move);
+            else
+                server->send(Clients.front(),move);
+            chessOneByPerson();
+        }
+    }
+}
+
 void MainWindow::on_pushButton_Surrender_clicked()
 {
     game->totalSteps++;
@@ -406,6 +466,15 @@ void MainWindow::on_pushButton_Surrender_clicked()
 
     else
         str = "The black"; //白色认输黑色win！
+
+    if (game_type == Online) {
+        NetworkData give_up(OPCODE::GIVEUP_OP,UserName,"QAQ");
+        online_failure = true;
+        if (!online_agreed)
+            socket->send(give_up);
+        else
+            server->send(Clients.front(),give_up);
+    }
 
     QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
                                                                      +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
@@ -465,6 +534,16 @@ void MainWindow::timer_update()
 
 void MainWindow::timelimit_exceeded()
 {
+    if (game_type == Online && online_player_flag != game->playerFlag) {
+        NetworkData tle(OPCODE::TIMEOUT_END_OP,UserName,"You have exceeded the time limit!");
+        if (!online_agreed)
+            socket->send(tle);
+        else
+            server->send(Clients.front(),tle);
+    }
+    if (game_type == Online && online_player_flag == game->playerFlag)
+        online_failure = true;
+
     game->gameStatus = DEAD;
     timer->stop();
     QString str;
@@ -531,8 +610,11 @@ void MainWindow::choosemode()
     if (game_type == View)
         choose_logs();
 
-    if (game_type == Online)
+    if (game_type == Online) {
         online_player_flag = dialog->online_hold;
+        opp_ip = dialog->ip;
+        opp_port = dialog->port;
+    }
 
     // 设置窗口大小
     setFixedSize(
@@ -642,5 +724,176 @@ void MainWindow::choose_logs()
             }
         }
         else logs_empty = true;
+    }
+}
+
+
+void MainWindow::displayError()//连接失败
+{
+    QMessageBox::warning(nullptr, "Oops!", "Connection Failure!");
+    reGame();
+}
+
+void MainWindow::connected()//连接成功 主动连接 用户作为客户端连接到作为服务端的远程机器
+{
+    QString str,chess;
+    if (online_player_flag) {
+        str = "the black";
+        chess = "b";
+    }
+
+    else {
+        str = "the white";
+        chess = "w";
+    }
+
+    NetworkData ready(OPCODE::READY_OP,UserName,chess);
+    socket->send(ready);
+    QMessageBox::information (this, "Connected!", "You hold " + str);
+}
+
+void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从服务端接受信号的槽函数
+{
+    if (data.op == OPCODE::READY_OP) {
+        initGameMode(game_type);
+        timer_init();
+    }
+
+    if (data.op == OPCODE::MOVE_OP) {
+        pair<int,int> move = index_decode(data.data1);
+        clickPosRow = move.first;
+        clickPosCol = move.second;
+        chessOneByPerson();
+    }
+
+    if (data.op == OPCODE::LEAVE_OP || data.op == OPCODE::TIMEOUT_END_OP || data.op == OPCODE::SUICIDE_END_OP || data.op == OPCODE::GIVEUP_END_OP) {
+        if (online_failure) {
+            NetworkData GG(data.op,UserName,"All right, I failed");
+            socket->send(GG);//败方回复确认
+        }
+        socket->bye();//离开或胜负已分 断开连接 清空ip与端口信息
+        online_player_flag = true;
+        opp_ip.clear();
+        opp_port = 0;
+        reGame();
+    }
+
+    if (data.op == OPCODE::GIVEUP_OP) { //收到对方认输
+        QMessageBox::information (this, "You win!", "Your opponent has given up");
+        game->totalSteps++;
+        game->gameStatus = DEAD;
+        timer->stop();//停止计时
+        Logs[!online_player_flag].emplace_back(make_pair('G',0));
+        NetworkData giveup_end(OPCODE::GIVEUP_END_OP,UserName,"So you have given up");
+        socket->send(giveup_end);
+        QString str;
+        if (game->playerFlag)
+            str = "The white"; //黑色认输白色赢！
+
+        else
+            str = "The black"; //白色认输黑色win！
+
+        QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
+                                                                                                 +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
+                                                                                                 +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
+        if (btnValue == QMessageBox::Ok) {
+            ask_keeplogs();//询问是否保存对局记录
+            reGame();
+        }
+    }
+}
+
+QString MainWindow::index_encode(int row,int col)//棋盘坐标编码
+{
+    char _row = row - 1 + 'A';
+    QString res(_row);
+    res += QString::number(col);
+    return res;
+}
+
+pair<int,int> MainWindow::index_decode(QString index_data)//棋盘坐标解码
+{
+    char *ch;
+    QByteArray ba = index_data.toLatin1();
+    ch = ba.data();
+    int row = ch[0] - 'A' + 1;
+    int col = ch[1] - '0';
+    return make_pair(row,col);
+}
+
+void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
+{
+    if (Clients.empty() || Clients.back() != client)
+        Clients.push(client);//连接的客户端队列
+    if (data.op == OPCODE::READY_OP) {
+        if (game->gameStatus != PLAYING) {
+            QString opp_hold;
+            if (data.data2 == "b") {
+                opp_hold = "black";
+                online_player_flag = false;
+            }
+
+            else if (data.data2 == "w") {
+                opp_hold = "white";
+                online_player_flag = true;
+            }
+
+            QString mess = data.data1 + " holding " + opp_hold + " wants to play with you";
+            QByteArray ba = mess.toLatin1();
+            char *ch;
+            ch = ba.data();
+            int res = QMessageBox::question(this, tr("Asking"), tr(ch), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认拒绝
+            if (res == QMessageBox::Yes) {
+                game_type = Online;
+                online_agreed = true;
+                NetworkData ready(OPCODE::READY_OP,UserName,"");
+                server->send(client,ready);
+                initGameMode(game_type);
+                timer_init();
+            }
+            else {
+                NetworkData reject(OPCODE::REJECT_OP,UserName,"");
+                server->send(client,reject);
+            }
+        }
+    }
+    if (data.op == OPCODE::MOVE_OP) {
+        pair<int,int> move = index_decode(data.data1);
+        clickPosRow = move.first;
+        clickPosCol = move.second;
+        chessOneByPerson();
+    }
+    if (data.op == OPCODE::LEAVE_OP || data.op == OPCODE::TIMEOUT_END_OP || data.op == OPCODE::SUICIDE_END_OP || data.op == OPCODE::GIVEUP_END_OP) {
+        if (online_failure) {
+            NetworkData GG(data.op,UserName,"All right, I failed");
+            server->send(Clients.front(),GG);//败方回复确认
+        }
+        server->leave(Clients.front());//离开或胜负已分 断开连接 清空ip与端口信息
+        online_player_flag = true;
+        Clients.pop();
+        reGame();
+    }
+    if (data.op == OPCODE::GIVEUP_OP) { //收到对方认输
+        QMessageBox::information (this, "You win!", "Your opponent has given up");
+        game->totalSteps++;
+        game->gameStatus = DEAD;
+        timer->stop();//停止计时
+        Logs[!online_player_flag].emplace_back(make_pair('G',0));
+        NetworkData giveup_end(OPCODE::GIVEUP_END_OP,UserName,"So you have given up");
+        server->send(Clients.front(),giveup_end);
+        QString str;
+        if (game->playerFlag)
+            str = "The white"; //黑色认输白色赢！
+
+        else
+            str = "The black"; //白色认输黑色win！
+
+        QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
+                                                                                                 +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
+                                                                                                 +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
+        if (btnValue == QMessageBox::Ok) {
+            ask_keeplogs();//询问是否保存对局记录
+            reGame();
+        }
     }
 }
