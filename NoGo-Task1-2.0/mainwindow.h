@@ -18,6 +18,10 @@
 #include <nogo_ai.h>
 #include <dialogchoosemode.h>
 
+#include <networkdata.h>
+#include <networkserver.h>
+#include <networksocket.h>
+
 #define info pair<char,int>
 
 QT_BEGIN_NAMESPACE
@@ -61,7 +65,15 @@ private:
     bool lose = false;//解决AI重开先后手问题
     bool view_lose = false;//解决复现输赢
     bool logs_empty = false;//存档文件夹是否为空
-    bool online_player_flag = true;//联机对战持有棋子颜色
+    bool online_player_flag = true;//联机对战己方持有棋子颜色
+    bool online_failure = false;//联机对战己方是否失败
+    bool online_agreed = false;//是否同意某客户端的联机请求
+
+    QString opp_ip;
+    quint16 opp_port = 0;
+    NetworkSocket *socket;
+    NetworkServer *server;
+    queue<QTcpSocket *> Clients;
 
     vector<vector<info>> Logs;//记录对局的数组 0为白棋 1为黑棋
 
@@ -76,6 +88,9 @@ private:
     void mouseReleaseEvent(QMouseEvent *event);
 
     void chessOneByPerson();
+    void chessOneOnline();
+    QString index_encode(int row,int col);
+    pair<int,int> index_decode(QString index_data);
 
     void timelimit_exceeded();//超时
     void timer_update();//重新倒计时
@@ -88,6 +103,10 @@ private slots:
     void on_pushButton_Surrender_clicked();//认输
     void TimerCount();//一秒一刷新
     void on_pushButton_Cheating_clicked();
+    void receiveData(QTcpSocket* client, NetworkData data);
+    void receive_fromServer(NetworkData data);
+    void displayError();
+    void connected();
 };
 
 
