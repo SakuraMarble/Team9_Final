@@ -68,9 +68,12 @@ private:
     bool online_player_flag = true;//联机对战己方持有棋子颜色
     bool online_failure = false;//联机对战己方是否失败
     bool online_agreed = false;//是否同意某客户端的联机请求
+    bool online_request = false;//是否主动发起过连接
 
     QString opp_ip;
     quint16 opp_port = 0;
+    QString IP;
+    quint16 PORT;
     NetworkSocket *socket;
     NetworkServer *server;
     queue<QTcpSocket *> Clients;

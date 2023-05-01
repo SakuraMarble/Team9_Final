@@ -23,6 +23,10 @@ MainWindow::MainWindow(QWidget *parent,QString username)
     }
     ui->statusbar->addPermanentWidget(ui->label_UserName);
 
+    IP = "127.0.0.1";
+    PORT = 16667;
+
+    this->server = new NetworkServer(this);//新建服务端
     this->socket = new NetworkSocket(new QTcpSocket(), this);//新建客户端
 
     connect(socket, &NetworkSocket::receive, this, &MainWindow::receive_fromServer);
@@ -32,9 +36,11 @@ MainWindow::MainWindow(QWidget *parent,QString username)
     connect(socket->base(), &QAbstractSocket::errorOccurred, this, &MainWindow::displayError);
     connect(socket->base(), &QAbstractSocket::connected, this, &MainWindow::connected);
 
-    this->server = new NetworkServer(this);//新建服务端
-
     connect(this->server, &NetworkServer::receive, this, &MainWindow::receiveData);
+
+    //this->server->listen(QHostAddress::Any,PORT);
+    this->socket->hello(IP,PORT);
+    this->socket->base()->waitForConnected(2000);
 
     Logs.resize(2);
     documentPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);//Windows用户默认文档保存位置
@@ -169,12 +175,26 @@ void MainWindow::initGame()
     //创建消息框
     choosemode();
 
-    if (game_type != Online)
+    //if (game_type != Online)
         initGameMode(game_type);//Online模式下 主动联机收到READY_OP之后开始游戏 reGame同理
 
-    else {
+    if (online_request) {
+        qDebug() << opp_ip << opp_port;
+
+        disconnect(this->server,&NetworkServer::receive,this,&MainWindow::receiveData);
+        //Clients.pop();
+        delete this->server;
+        this->server = new NetworkServer(this);
+        // 端口相当于传信息的窗户，收的人要在这守着
+        this->server->listen(QHostAddress::Any,PORT);
+
+        connect(this->server,&NetworkServer::receive,this,&MainWindow::receiveData);
+        socket->bye();
         socket->hello(opp_ip,opp_port);//主动发起联机
-        socket->base()->waitForConnected(5000);
+        if(!this->socket->base()->waitForConnected(60000)){
+            qDebug()<<"reconnect fail";
+        }
+        //socket->base()->waitForConnected(5000);
     }
 
     if (game_type != View && game_type != Online)//复现模式下无需倒计时 联机模式确认开始再计时
@@ -188,6 +208,7 @@ void MainWindow::reGame()
     //view_lose = false;
     logs_empty = false;
     online_failure = false;
+    online_request = false;
     choosemode();
 
     if (game_type != Online)
@@ -614,6 +635,8 @@ void MainWindow::choosemode()
         online_player_flag = dialog->online_hold;
         opp_ip = dialog->ip;
         opp_port = dialog->port;
+        //if (opp_ip != "" && !opp_port)
+            online_request = true;
     }
 
     // 设置窗口大小
@@ -755,7 +778,7 @@ void MainWindow::connected()//连接成功 主动连接 用户作为客户端连
 void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从服务端接受信号的槽函数
 {
     if (data.op == OPCODE::READY_OP) {
-        initGameMode(game_type);
+        //initGameMode(game_type);
         timer_init();
     }
 
@@ -848,7 +871,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
                 online_agreed = true;
                 NetworkData ready(OPCODE::READY_OP,UserName,"");
                 server->send(client,ready);
-                initGameMode(game_type);
+                //initGameMode(game_type);
                 timer_init();
             }
             else {
