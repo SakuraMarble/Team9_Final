@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "ui_dialogchoosemode.h"
 #include <math.h>
 #include <QMessageBox>
 #include "dialogchoosemode.h"
@@ -25,6 +26,15 @@ MainWindow::MainWindow(QWidget *parent,QString username)
 
     IP = "127.0.0.1";
     PORT = 16667;
+    last = nullptr;
+
+    dialog = new DialogChooseMode;
+    dialog->hide();
+
+    this->dialog->ui->IPEdit->setText(IP);
+    this->dialog->ui->PORTEdit->setText(QString::number(PORT));
+
+    connect(this->dialog->ui->resetButton,&QPushButton::clicked,this,&MainWindow::reSet);
 
     this->server = new NetworkServer(this);//新建服务端
     this->socket = new NetworkSocket(new QTcpSocket(), this);//新建客户端
@@ -192,8 +202,11 @@ void MainWindow::initGame()
         socket->bye();
         socket->hello(opp_ip,opp_port);//主动发起联机
         if(!this->socket->base()->waitForConnected(60000)){
-            qDebug()<<"reconnect fail";
+            qDebug() << "reconnect fail" << '\n';
         }
+        NetworkData ready(OPCODE::READY_OP,UserName,"");
+        socket->send(ready);
+        qDebug() << "Client sends READY_OP" << '\n';
         //socket->base()->waitForConnected(5000);
     }
 
@@ -211,12 +224,26 @@ void MainWindow::reGame()
     online_request = false;
     choosemode();
 
-    if (game_type != Online)
+    //if (game_type != Online)
         initGameMode(game_type);
 
-    else {
+    if (online_request) {
+        qDebug() << opp_ip << opp_port;
+
+        disconnect(this->server,&NetworkServer::receive,this,&MainWindow::receiveData);
+        //Clients.pop();
+        delete this->server;
+        this->server = new NetworkServer(this);
+        // 端口相当于传信息的窗户，收的人要在这守着
+        this->server->listen(QHostAddress::Any,PORT);
+
+        connect(this->server,&NetworkServer::receive,this,&MainWindow::receiveData);
+        socket->bye();
         socket->hello(opp_ip,opp_port);//主动发起联机
-        socket->base()->waitForConnected(5000);
+        if(!this->socket->base()->waitForConnected(60000)){
+            qDebug()<<"reconnect fail";
+        }
+        //socket->base()->waitForConnected(5000);
     }
 
     if (game_type != View && game_type != Online)
@@ -229,8 +256,8 @@ void MainWindow::initGameMode(GameType type)
 {
     game->totalSteps=0;
     game->totalTime=0;
-    game->gameStatus = PLAYING;
-    game->startGame(type,online_player_flag);
+    game->gameStatus = WAITING;
+    game->startGame(type);
     update();
 
     if (game_type == View && !logs_empty)
@@ -464,10 +491,11 @@ void MainWindow::chessOneOnline()
         if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1 && !view_lose)
         {
             NetworkData move = NetworkData(OPCODE::MOVE_OP,index_encode(clickPosRow,clickPosCol),"");
-            if (!online_agreed)
+            //if (!online_agreed)
+            qDebug() << "send move" << '\n';
                 socket->send(move);
-            else
-                server->send(Clients.front(),move);
+            //else
+                //server->send(Clients.front(),move);
             chessOneByPerson();
         }
     }
@@ -521,6 +549,7 @@ void MainWindow::timer_init()
     //if (timer->isActive())
     countlabel->setText("Remaining time:"+QString::number(TimerCountNumber));
     timer->start();
+    game->gameStatus = PLAYING;
 }
 
 void MainWindow::TimerCount()
@@ -614,7 +643,8 @@ void MainWindow::on_pushButton_Cheating_clicked()
 
 void MainWindow::choosemode()
 {
-    DialogChooseMode *dialog = new DialogChooseMode;
+    //dialog = new DialogChooseMode;
+    //dialog->show();
     dialog->exec();
     game_type = dialog->game_typeForAll;
 
@@ -644,7 +674,8 @@ void MainWindow::choosemode()
         MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE,
         MARGIN * 2 + BLOCK_SIZE * BOARD_GRAD_SIZE);
     TimerLimit = dialog->timelimit;
-    delete dialog;
+    dialog->hide();
+    //delete dialog;
 }
 
 void MainWindow::ask_keeplogs()
@@ -771,7 +802,7 @@ void MainWindow::connected()//连接成功 主动连接 用户作为客户端连
     }
 
     NetworkData ready(OPCODE::READY_OP,UserName,chess);
-    socket->send(ready);
+    //socket->send(ready);
     QMessageBox::information (this, "Connected!", "You hold " + str);
 }
 
@@ -779,10 +810,12 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
 {
     if (data.op == OPCODE::READY_OP) {
         //initGameMode(game_type);
+        qDebug() << "Client receives READY_OP from server" << '\n';
         timer_init();
     }
 
     if (data.op == OPCODE::MOVE_OP) {
+        qDebug() << "Client receives MOVE_OP from server" << '\n';
         pair<int,int> move = index_decode(data.data1);
         clickPosRow = move.first;
         clickPosCol = move.second;
@@ -848,9 +881,14 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
 {
     if (Clients.empty() || Clients.back() != client)
         Clients.push(client);//连接的客户端队列
+    if (client != socket->base())
+        last = client;
     if (data.op == OPCODE::READY_OP) {
+        qDebug() << "Server receives READY_OP" << '\n';
+        qDebug() << data.data1 << data.data2 << '\n';
         if (game->gameStatus != PLAYING) {
             QString opp_hold;
+            //last = client;
             if (data.data2 == "b") {
                 opp_hold = "black";
                 online_player_flag = false;
@@ -869,6 +907,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
             if (res == QMessageBox::Yes) {
                 game_type = Online;
                 online_agreed = true;
+                qDebug() << "Online agreed" << '\n';
                 NetworkData ready(OPCODE::READY_OP,UserName,"");
                 server->send(client,ready);
                 //initGameMode(game_type);
@@ -881,6 +920,9 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
         }
     }
     if (data.op == OPCODE::MOVE_OP) {
+        qDebug() << "Server receives MOVE_OP" << '\n';
+        //server->send(socket->base(),data);
+        //server->send(last,data);
         pair<int,int> move = index_decode(data.data1);
         clickPosRow = move.first;
         clickPosCol = move.second;
@@ -918,5 +960,30 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
             ask_keeplogs();//询问是否保存对局记录
             reGame();
         }
+    }
+}
+
+void MainWindow::reSet()
+{
+    //this->ui->connectLabel->setText("connection fail");
+    IP=this->dialog->ui->IPEdit->text();
+    PORT=this->dialog->ui->PORTEdit->text().toInt();
+    //this->reStart();
+    //this->reConnect();
+    qDebug() << IP << PORT;
+
+    disconnect(this->server,&NetworkServer::receive,this,&MainWindow::receiveData);
+    //Clients.pop();
+    delete this->server;
+    this->server = new NetworkServer(this);
+    // 端口相当于传信息的窗户，收的人要在这守着
+    this->server->listen(QHostAddress::Any,PORT);
+
+    connect(this->server,&NetworkServer::receive,this,&MainWindow::receiveData);
+    qDebug()<<"client reconnect to the server.";
+    socket->bye();
+    socket->hello(IP,PORT);//主动发起联机
+    if(!this->socket->base()->waitForConnected(60000)){
+        qDebug()<<"reconnect fail";
     }
 }

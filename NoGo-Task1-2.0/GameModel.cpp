@@ -3,7 +3,7 @@
 #include "nogo_ai.h"
 #include "mainwindow.h"
 
-void GameModel::startGame(GameType type,bool player_flag)
+void GameModel::startGame(GameType type)
 {
     gameType = type; // 前面的gameType是GameModel类中的成员变量
 
@@ -39,7 +39,7 @@ void GameModel::startGame(GameType type,bool player_flag)
     }
 
     //轮到黑方下棋为 true，白方为 false
-    playerFlag = player_flag;
+    playerFlag = true;
 }
 
 void GameModel::actionByPerson(int row, int col)
