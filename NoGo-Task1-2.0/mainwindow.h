@@ -77,6 +77,9 @@ private:
     NetworkSocket *socket;
     NetworkServer *server;
     queue<QTcpSocket *> Clients;
+    QTcpSocket *last;
+
+    DialogChooseMode *dialog;
 
     vector<vector<info>> Logs;//记录对局的数组 0为白棋 1为黑棋
 
@@ -110,6 +113,7 @@ private slots:
     void receive_fromServer(NetworkData data);
     void displayError();
     void connected();
+    void reSet();
 };
 
 
