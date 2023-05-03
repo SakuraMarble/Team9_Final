@@ -27,5 +27,6 @@ public:
     bool ai_check(brd &board,int size);
     pii run(brd &board,int use,int size);
     int get_possi(brd&board,int use,int size);
+    bool ai_try(brd &board,int x,int y,int col,int size);
 };
 #endif

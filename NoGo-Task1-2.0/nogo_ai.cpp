@@ -104,6 +104,13 @@ pii ai::run(brd &board,int use,int size){
                 }
         return make_pair(x,y);
     }
-int ai::get_possi(brd &board,int use,int size){
+int ai::get_possi(brd &board,int use,int size){//判断优势
     return ai_calc(board,use,size)/100;
+}
+bool ai::ai_try(brd &board,int x,int y,int col,int size){//判断是否可行
+    if(board[x][y]!=ai_empty)return false;
+    board[x][y]=col;
+    bool ret=ai_check(board,size);
+    board[x][y]=ai_empty;
+    return ret;
 }

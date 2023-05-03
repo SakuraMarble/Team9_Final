@@ -15,8 +15,9 @@ SignInWindow::SignInWindow(QWidget *parent) :
     QShortcut *key=new QShortcut(QKeySequence(Qt::Key_Return),this);//创建一个快捷键"Key_Return"键
 
     connect(key,SIGNAL(activated()),this,SLOT(on_pushButton_clicked()));//连接到指定槽函数
+    ui->lineEdit_UserName->setText("test");
+    ui->lineEdit_Password->setText("test");//方便调试
 }
-
 SignInWindow::~SignInWindow()
 {
     delete ui;

@@ -61,6 +61,8 @@ private:
     int BOARD_GRAD_SIZE = 10;
 
     int clickPosRow,clickPosCol; // 存储即将点击的位置
+    int lst_flg=3373;//在进行提示时，不会重复运算。
+    pii ai_ret;//记录ai选择
     bool selectPos = false; // 是否移动到合适的位置，以选中某个交叉点
     bool lose = false;//解决AI重开先后手问题
     bool view_lose = false;//解决复现输赢

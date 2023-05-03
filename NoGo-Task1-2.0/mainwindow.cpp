@@ -141,13 +141,28 @@ void MainWindow::paintEvent(QPaintEvent * event)
         painter.drawRect(MARGIN + BLOCK_SIZE * clickPosCol - MARK_SIZE / 2, MARGIN + BLOCK_SIZE * clickPosRow - MARK_SIZE / 2,MARK_SIZE,MARK_SIZE);
     }
 
+    if(game_type==AI){//PVE给玩家提示
+        if(game->playerFlag!=lst_flg){
+            lst_flg=game->playerFlag;
+        ai_ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);
+        }
+        int chosx=ai_ret.first,chosy=ai_ret.second;
+        QLinearGradient gradient(MARGIN + BLOCK_SIZE * chosy - 1.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * chosx - 1.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * chosy , MARGIN + BLOCK_SIZE * chosx);
+
+        gradient.setColorAt(1, QColor(0, 255, 0));
+        gradient.setColorAt(0, QColor(255,0,0));
+        painter.setBrush(gradient);
+        painter.drawEllipse(MARGIN + BLOCK_SIZE * chosy - CHESS_RADIUS*0.5,MARGIN + BLOCK_SIZE * chosx - CHESS_RADIUS*0.5,CHESS_RADIUS ,CHESS_RADIUS );
+
+    }
+
     // 绘制棋子
     // 设置画笔颜色、宽度
     painter.setPen(QPen(Qt::transparent, 2));
     for (int i = 0; i < BOARD_GRAD_SIZE; i++)
         for (int j = 0; j < BOARD_GRAD_SIZE; j++)
         {
-            if(game->totalSteps>0&&i==lastx&&j==lasty){
+            if(game->totalSteps>0&&i==lastx&&j==lasty){//高亮上一点
                 QLinearGradient gradient(MARGIN + BLOCK_SIZE * j - 1.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * i - 1.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * j , MARGIN + BLOCK_SIZE * i);
 
                 gradient.setColorAt(1, QColor(0, 255, 0));
@@ -173,6 +188,17 @@ void MainWindow::paintEvent(QPaintEvent * event)
 
                 painter.setBrush(gradient);
                 painter.drawEllipse(MARGIN + BLOCK_SIZE * j - CHESS_RADIUS ,MARGIN + BLOCK_SIZE * i - CHESS_RADIUS ,CHESS_RADIUS * 2,CHESS_RADIUS * 2);
+            }
+            else if(game_type==AI){//指出不能走的地方
+                if(!newai.ai_try(game->gameMapVec,i,j,game->playerFlag,BOARD_GRAD_SIZE)){
+                    QLinearGradient gradient(MARGIN + BLOCK_SIZE * j - 0.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * i - 0.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * j , MARGIN + BLOCK_SIZE * i);
+
+                    gradient.setColorAt(1, Qt::red);
+                    gradient.setColorAt(0, Qt::red);
+                    painter.setBrush(gradient);
+                    painter.drawEllipse(MARGIN + BLOCK_SIZE * j - CHESS_RADIUS*0.5,MARGIN + BLOCK_SIZE * i - CHESS_RADIUS*0.5,CHESS_RADIUS ,CHESS_RADIUS);
+
+                }
             }
         }
 }
