@@ -879,6 +879,10 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
             reGame();
         }
     }
+
+    if(data.op == OPCODE::REJECT_OP) {
+        reGame();
+    }
 }
 
 QString MainWindow::index_encode(int row,int col)//棋盘坐标编码
