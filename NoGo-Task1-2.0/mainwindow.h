@@ -76,8 +76,8 @@ private:
     quint16 PORT;
     NetworkSocket *socket;
     NetworkServer *server;
-    queue<QTcpSocket *> Clients;
-    QTcpSocket *last;
+    queue<QTcpSocket *> Clients;//第二阶段没用到 用来处理多个客户端连接问题
+    QTcpSocket *opponent;//第二阶段只处理一个客户端连接 用一个指针记录对手客户端套接字
 
     DialogChooseMode *dialog;
 
