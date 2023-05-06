@@ -84,6 +84,8 @@ private:
     DialogChooseMode *dialog;
 
     vector<vector<info>> Logs;//记录对局的数组 0为白棋 1为黑棋
+    QPushButton *btn; //用来leave op的按钮；
+    NetworkData * publicNetworkdata; //所有类内函数均可访问的数据，用来实现不同函数之间的联系
 
     // 绘制
     void paintEvent(QPaintEvent * event);
@@ -116,6 +118,7 @@ private slots:
     void displayError();
     void connected();
     void reSet();
+    void leaveGame();
 };
 
 

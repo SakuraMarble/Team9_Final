@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent,QString username)
         ui->label_UserName->setText(UserName);
     } else {
     ui->label_UserName->setStyleSheet("color:red;");
-    ui->label_UserName->setText(UserName+"(You are the VIP)");
+    ui->label_UserName->setText(UserName);
     }
     ui->statusbar->addPermanentWidget(ui->label_UserName);
 
@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent,QString username)
     connect(this->server, &NetworkServer::receive, this, &MainWindow::receiveData);
 
     //this->server->listen(QHostAddress::Any,PORT);
-    this->socket->hello(IP,PORT);
+    //this->socket->hello(IP,PORT);
     this->socket->base()->waitForConnected(2000);
 
     Logs.resize(2);
@@ -79,7 +79,7 @@ void MainWindow::paintEvent(QPaintEvent * event)
     paint.drawPixmap(0, 0, pixmap);
     QWidget::paintEvent(event);
     ai newai;
-    if(game_type == MAN)
+    if(game_type == MAN || game_type == Online)
     {
         if(game->playerFlag == true)
         {
@@ -230,6 +230,10 @@ void MainWindow::initGame()
         if(!this->socket->base()->waitForConnected(60000)){
             qDebug() << "reconnect fail" << '\n';
         }*/
+        socket->hello(opp_ip,opp_port);//主动发起联机
+        if(!this->socket->base()->waitForConnected(60000)){
+            qDebug() << "reconnect fail" << '\n';
+        }
         QString hold;
         if (online_player_flag)
             hold = "b";
@@ -250,8 +254,10 @@ void MainWindow::initGame()
 
 void MainWindow::reGame()
 {
+    delete btn;
     //view_lose = false;
     logs_empty = false;
+    online_player_flag = true;
     online_failure = false;
     online_request = false;
     choosemode();
@@ -583,7 +589,7 @@ void MainWindow::timer_init()
     timer = new QTimer;
     countlabel = ui->label;
     //countlabel->setGeometry(QRect(280,0,60,25));
-    countlabel->setStyleSheet("font-family:\"Lucida Handwriting\";font-size:23px;");
+    countlabel->setStyleSheet("font-family:\"Lucida Handwriting\";font-size:16px;");
     //countlabel->setAlignment(Qt::AlignHCenter);
     timer->setInterval(1000);//1s刷新一次
     TimerCountNumber = TimerLimit;
@@ -608,7 +614,7 @@ void MainWindow::TimerCount()
     //setCentralWidget(centralWidget);
     if(TimerCountNumber <= 5)
     {
-        countlabel->setStyleSheet("font-family:\"Lucida Handwriting\";font-size:23px;color:red;");
+        countlabel->setStyleSheet("font-family:\"Lucida Handwriting\";font-size:16px;color:red;");
     }
     if (!TimerCountNumber) {
         timer->stop();
@@ -706,6 +712,9 @@ void MainWindow::choosemode()
         choose_logs();
 
     if (game_type == Online) {
+        btn=new QPushButton("Leave the game",this);//之后在regame之前要给delete掉
+        ui->horizontalLayout->addWidget(btn);
+        connect(btn,&QPushButton::clicked,this,&MainWindow::leaveGame);
         if (!online_agreed) //设置客户端online_player_flag
             online_player_flag = dialog->online_hold;
         opp_ip = dialog->ip;
@@ -875,6 +884,12 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
             NetworkData GG(data.op,UserName,"All right, I failed");
             socket->send(GG);//败方回复确认
         }
+        int ret = QMessageBox::question(this,tr("Asking"),tr("Do you want to play again with your opponent?"),QMessageBox::Yes | QMessageBox::No,QMessageBox::No);
+        /*if(ret == QMessageBox::Yes)
+        {
+            socket
+        }*/
+
         socket->bye();//离开或胜负已分 断开连接 清空ip与端口信息
         online_player_flag = true;
         opp_ip.clear();
@@ -982,13 +997,19 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
         clickPosCol = move.second;
         chessOneByPerson();
     }
-    if (data.op == OPCODE::LEAVE_OP || data.op == OPCODE::TIMEOUT_END_OP || data.op == OPCODE::SUICIDE_END_OP || data.op == OPCODE::GIVEUP_END_OP) {
+    if (data.op == OPCODE::TIMEOUT_END_OP || data.op == OPCODE::SUICIDE_END_OP || data.op == OPCODE::GIVEUP_END_OP) {
         if (online_failure) {
             NetworkData GG(data.op,UserName,"All right, I failed");
             server->send(opponent,GG);//败方回复确认
         }
         server->leave(opponent);//离开或胜负已分 断开连接 清空ip与端口信息
-        online_player_flag = true;
+        Clients.pop();
+        reGame();
+    }
+    if( data.op == OPCODE::LEAVE_OP)
+    {
+        QMessageBox::information(this,"Your opponent has left",data.data1+": "+data.data2);
+        server->leave(opponent);
         Clients.pop();
         reGame();
     }
@@ -1036,8 +1057,31 @@ void MainWindow::reSet()
     connect(this->server,&NetworkServer::receive,this,&MainWindow::receiveData);
     qDebug()<<"client reconnect to the server.";
     socket->bye();
-    socket->hello(IP,PORT);//主动发起联机
+    //socket->hello(IP,PORT);//主动发起联机
     if(!this->socket->base()->waitForConnected(60000)){
         qDebug()<<"reconnect fail";
     }
+}
+void MainWindow::leaveGame()
+{
+    //if(!online_agreed)
+    //{
+        int ret = QMessageBox::question(this,"Confirm","Really leaving the game?",QMessageBox::Yes | QMessageBox::No,QMessageBox::No);
+        if(ret == QMessageBox::Yes){
+        QDialog * askWhy = new QDialog(this);
+        askWhy->setWindowTitle("Send the reason of leaving");
+        askWhy->resize(300,25);
+        QLayout* layout = new QVBoxLayout(askWhy);
+        QLineEdit * reason = new QLineEdit(askWhy);
+        reason->setText("宁的棋下的也忒好啦,溜了溜了");
+        QPushButton * sendMessage = new QPushButton("send the message",askWhy);
+        NetworkData * lea = new NetworkData(OPCODE::LEAVE_OP,this->UserName,reason->text());
+        publicNetworkdata = lea;
+        layout->addWidget(reason);
+        layout->addWidget(sendMessage);
+        setLayout(layout);
+        askWhy->exec();
+        }
+
+    //}
 }
