@@ -633,6 +633,8 @@ void MainWindow::timer_update()
 
 void MainWindow::timelimit_exceeded()
 {
+    if (game_type != View)
+        Logs[game->playerFlag].emplace_back(make_pair('T',0));//超时的编码
     if (game_type == Online && online_player_flag != game->playerFlag) {
         NetworkData tle(OPCODE::TIMEOUT_END_OP,UserName,"You have exceeded the time limit!");
         if (!online_agreed)
@@ -752,7 +754,7 @@ void MainWindow::ask_keeplogs()
         if (out.is_open()) {
             for (int i = 1;i >= 0;i--) {
                 for (const auto& p : Logs[i]) {
-                    if (!p.second && p.first == 'G')//认输记录为"G0" 按要求只输出'G'
+                    if (!p.second && (p.first == 'G' || p.first == 'T'))//认输记录为"G0"或"T0" 按要求只输出'G'或'T'
                         out << p.first << ' ';
                     else
                         out << p.first << p.second << ' ';
@@ -867,6 +869,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
         //initGameMode(game_type);
         qDebug() << "Client receives READY_OP from server" << '\n';
         timer_init();
+        timer->stop();
     }
 
     if (data.op == OPCODE::MOVE_OP) {
@@ -981,6 +984,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
                 server->send(opponent,ready);
                 initGameMode(game_type);
                 timer_init();
+                timer->stop();
             }
             else {
                 NetworkData reject(OPCODE::REJECT_OP,UserName,"");
