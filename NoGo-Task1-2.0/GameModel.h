@@ -24,7 +24,7 @@ enum GameStatus
 };
 
 
-const int MARGIN = 30; // 棋盘边缘空隙
+const int MARGIN = 70; // 棋盘边缘空隙
 const int CHESS_RADIUS = 15; // 棋子半径
 const int MARK_SIZE = 6; // 落子标记边长
 const int BLOCK_SIZE = 40; // 格子大小
