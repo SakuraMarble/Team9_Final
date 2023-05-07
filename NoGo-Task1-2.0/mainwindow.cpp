@@ -4,11 +4,13 @@
 #include <math.h>
 #include <QMessageBox>
 #include "dialogchoosemode.h"
+#include <Chat.h>
 MainWindow::MainWindow(QWidget *parent,QString username)
     : QMainWindow(parent),UserName(username), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
+    connect(ui->Chat,&QPushButton::clicked,this,&MainWindow::on_pushButton_Chat_clicked);
     //setMouseTracking(true);
     // 设置窗口大小
     setFixedSize(
@@ -67,7 +69,9 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+void Chat(){
 
+}
 //实现paintEvent方法
 void MainWindow::paintEvent(QPaintEvent * event)
 {
@@ -923,7 +927,10 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
             reGame();
         }
     }
-
+    if (data.op == OPCODE::CHAT_OP) { //收到对方认输
+        QMessageBox::information (this, "Said to you", data.data1);
+        qDebug() << "Client receives CHAT_OP from server" << '\n';
+    }
     if(data.op == OPCODE::REJECT_OP) {
         reGame();
     }
@@ -1017,6 +1024,10 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
         Clients.pop();
         reGame();
     }
+    if( data.op == OPCODE::CHAT_OP)
+    {
+        QMessageBox::information(this,"Said to you",data.data1);
+    }
     if (data.op == OPCODE::GIVEUP_OP) { //收到对方认输
         QMessageBox::information (this, "You win!", "Your opponent has given up");
         game->totalSteps++;
@@ -1089,3 +1100,9 @@ void MainWindow::leaveGame()
 
     //}
 }
+void MainWindow::on_pushButton_Chat_clicked(){
+    dialog2 = new class Chat;
+
+    dialog2->setsocket(socket,server,opponent,online_agreed);
+    dialog2->exec();
+};

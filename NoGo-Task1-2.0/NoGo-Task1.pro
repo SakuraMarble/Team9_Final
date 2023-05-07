@@ -11,6 +11,7 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    Chat.cpp \
     GameModel.cpp \
     connectdialog.cpp \
     dialogchoosemode.cpp \
@@ -23,6 +24,7 @@ SOURCES += \
     signinwindow.cpp
 
 HEADERS += \
+    Chat.h \
     GameModel.h \
     connectdialog.h \
     dialogchoosemode.h \
@@ -34,6 +36,7 @@ HEADERS += \
     signinwindow.h
 
 FORMS += \
+    Chat.ui \
     connectdialog.ui \
     dialogchoosemode.ui \
     mainwindow.ui \

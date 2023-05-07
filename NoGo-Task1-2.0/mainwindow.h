@@ -21,7 +21,7 @@
 #include <networkdata.h>
 #include <networkserver.h>
 #include <networksocket.h>
-
+#include <Chat.h>
 #define info pair<char,int>
 
 QT_BEGIN_NAMESPACE
@@ -82,6 +82,7 @@ private:
     QTcpSocket *opponent;//第二阶段只处理一个客户端连接 用一个指针记录对手客户端套接字
 
     DialogChooseMode *dialog;
+    Chat *dialog2;
 
     vector<vector<info>> Logs;//记录对局的数组 0为白棋 1为黑棋
     QPushButton *btn; //用来leave op的按钮；
@@ -104,7 +105,6 @@ private:
 
     void timelimit_exceeded();//超时
     void timer_update();//重新倒计时
-
     void ask_keeplogs();//询问是否保存对局记录
     void choose_logs();//View复现模式下选择本地存档
 
@@ -119,6 +119,7 @@ private slots:
     void connected();
     void reSet();
     void leaveGame();
+    void on_pushButton_Chat_clicked();
 };
 
 
