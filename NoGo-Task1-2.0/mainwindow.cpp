@@ -593,9 +593,9 @@ void MainWindow::on_pushButton_Surrender_clicked()
         ask_keeplogs();//询问是否保存对局记录
         if(game_type == Online&&!online_agreed)
         {
-
-            NetworkData agagin(OPCODE::READY_OP,UserName,"b");
-            socket->send(agagin);
+            qDebug()<<"aaa";
+            NetworkData again(OPCODE::READY_OP,UserName,"b");
+            socket->send(again);
             initGameMode(Online);
             timer_init();
             timer->stop();
@@ -920,6 +920,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
     }
 
     if (data.op == OPCODE::TIMEOUT_END_OP || data.op == OPCODE::SUICIDE_END_OP || data.op == OPCODE::GIVEUP_END_OP) {
+        timer->stop();
         if (online_failure) {
             NetworkData GG(data.op,UserName,"All right, I failed");
             socket->send(GG);//败方回复确认
@@ -946,6 +947,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
     }
     if(data.op == OPCODE::LEAVE_OP)
     {
+        timer->stop();
         QDialog * left = new QDialog(this);
         left->setWindowTitle("Your opponent has left");
         QLabel * reason = new QLabel(left);
@@ -960,6 +962,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
     }
 
     if (data.op == OPCODE::GIVEUP_OP) { //收到对方认输
+        timer->stop();
         QMessageBox::information (this, "You win!", "Your opponent has given up");
         game->totalSteps++;
         game->gameStatus = DEAD;
@@ -1076,24 +1079,25 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
     }
     if (data.op == OPCODE::TIMEOUT_END_OP || data.op == OPCODE::SUICIDE_END_OP || data.op == OPCODE::GIVEUP_END_OP) {
         if (online_failure) {
+            timer->stop();
             NetworkData GG(data.op,UserName,"All right, I failed");
             server->send(opponent,GG);//败方回复确认
         }
         server->leave(opponent);//离开或胜负已分 断开连接 清空ip与端口信息
         Clients.pop();
-        if(game_type == Online&&!online_agreed)
+        /*if(game_type == Online&&!online_agreed)
         {
-
             NetworkData agagin(OPCODE::READY_OP,UserName,"b");
             socket->send(agagin);
             initGameMode(Online);
             timer_init();
             timer->stop();
-        }
+        }*/
         //reGame();
     }
     if( data.op == OPCODE::LEAVE_OP)
     {
+        timer->stop();
         QDialog * left = new QDialog(this);
         left->setWindowTitle("Your opponent has left");
         QLabel * reason = new QLabel(left);
@@ -1113,6 +1117,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
         QMessageBox::information(this,"Said to you",data.data1);
     }
     if (data.op == OPCODE::GIVEUP_OP) { //收到对方认输
+        timer->stop();
         QMessageBox::information (this, "You win!", "Your opponent has given up");
         game->totalSteps++;
         game->gameStatus = DEAD;
@@ -1163,12 +1168,13 @@ void MainWindow::reSet()
     this->server->listen(QHostAddress::Any,PORT);
 
     connect(this->server,&NetworkServer::receive,this,&MainWindow::receiveData);
-    qDebug()<<"client reconnect to the server.";
+    //qDebug()<<"client reconnect to the server.";
     socket->bye();
     //socket->hello(IP,PORT);//主动发起联机
-    if(!this->socket->base()->waitForConnected(60000)){
+    /*if(!this->socket->base()->waitForConnected(60000)){
         qDebug()<<"reconnect fail";
-    }
+    }*/
+    QMessageBox::information(this,"Succeed!","You have reset the server,other players can find you!");
 }
 void MainWindow::leaveGame()
 {
