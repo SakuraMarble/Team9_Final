@@ -244,7 +244,7 @@ void MainWindow::initGame()
             hold = "w";
         NetworkData ready(OPCODE::READY_OP,UserName,hold);
         socket->send(ready);
-        qDebug() << "Client sends READY_OP" << '\n';
+        qDebug() << QDateTime::currentMSecsSinceEpoch() << "Client sends READY_OP" << '\n';
         initGameMode(game_type);
         //socket->base()->waitForConnected(5000);
     }
@@ -523,14 +523,19 @@ void MainWindow::chessOneByPerson()
                 ask_keeplogs();//询问是否保存对局记录
                 if(game_type == Online&&!online_agreed)
                 {
-                    NetworkData agagin(OPCODE::READY_OP,UserName,"b");
-                    socket->send(agagin);
+                    QString hold;
+                    if (online_player_flag)
+                        hold = "b";
+                    else
+                        hold = "w";
+                    NetworkData again(OPCODE::READY_OP,UserName,hold);
+                    socket->send(again);
                     initGameMode(Online);
                     timer_init();
                     timer->stop();
                 }
                 if(game_type!=Online)
-                reGame();
+                    reGame();
             }
             else reGame();
         }
@@ -550,11 +555,11 @@ void MainWindow::chessOneOnline()
         {
             NetworkData move = NetworkData(OPCODE::MOVE_OP,index_encode(clickPosRow,clickPosCol),"");
             if (!online_agreed) {
-                qDebug() << "Client sends move" << '\n';
+                qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Client sends move" + opp_ip << move.data1 << '\n';
                 socket->send(move);
             }
             else {
-                qDebug() << "Server sends move" << '\n';
+                qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Server sends move" + opp_ip << move.data1 << '\n';
                 server->send(opponent,move);
             }
             chessOneByPerson();
@@ -580,10 +585,14 @@ void MainWindow::on_pushButton_Surrender_clicked()
     if (game_type == Online) {
         NetworkData give_up(OPCODE::GIVEUP_OP,UserName,"QAQ");
         online_failure = true;
-        if (!online_agreed)//以此判断是服务端还是客户端 以下同理
+        if (!online_agreed) { //以此判断是服务端还是客户端 以下同理
             socket->send(give_up);
-        else
+            qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Client sends give up " + opp_ip << give_up.data1 << '\n';
+        }
+        else {
             server->send(opponent,give_up);
+            qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Server sends give up " + opp_ip << give_up.data1 << '\n';
+        }
     }
 
     QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
@@ -593,9 +602,14 @@ void MainWindow::on_pushButton_Surrender_clicked()
         ask_keeplogs();//询问是否保存对局记录
         if(game_type == Online&&!online_agreed)
         {
-            qDebug()<<"aaa";
-            NetworkData again(OPCODE::READY_OP,UserName,"b");
+            QString hold;
+            if (online_player_flag)
+                hold = "b";
+            else
+                hold = "w";
+            NetworkData again(OPCODE::READY_OP,UserName,hold);
             socket->send(again);
+            qDebug() << QDateTime::currentMSecsSinceEpoch() << "Client wants to play again" + opp_ip << again.data1 << again.data2 << '\n';
             initGameMode(Online);
             timer_init();
             timer->stop();
@@ -608,7 +622,7 @@ void MainWindow::on_pushButton_Surrender_clicked()
 
 void MainWindow::timer_init()
 {
-    if (!timer)
+    if (timer)
         delete timer;
     timer = new QTimer;
     countlabel = ui->label;
@@ -661,10 +675,15 @@ void MainWindow::timelimit_exceeded()
         Logs[game->playerFlag].emplace_back(make_pair('T',0));//超时的编码
     if (game_type == Online && online_player_flag != game->playerFlag) {
         NetworkData tle(OPCODE::TIMEOUT_END_OP,UserName,"You have exceeded the time limit!");
-        if (!online_agreed)
+        if (!online_agreed) {
             socket->send(tle);
-        else
+            qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Client sends tle " + opp_ip << tle.data1 << '\n';
+        }
+
+        else {
             server->send(opponent,tle);
+            qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Server sends tle " + opp_ip << tle.data1 << '\n';
+        }
     }
     if (game_type == Online && online_player_flag == game->playerFlag)
         online_failure = true;
@@ -684,9 +703,13 @@ void MainWindow::timelimit_exceeded()
         ask_keeplogs();//询问是否保存对局记录
         if(game_type == Online&&!online_agreed)
         {
-
-            NetworkData agagin(OPCODE::READY_OP,UserName,"b");
-            socket->send(agagin);
+            QString hold;
+            if (online_player_flag)
+                hold = "b";
+            else
+                hold = "w";
+            NetworkData again(OPCODE::READY_OP,UserName,hold);
+            socket->send(again);
              initGameMode(Online);
              timer_init();
              timer->stop();
@@ -904,15 +927,15 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
 {
     if (data.op == OPCODE::READY_OP) {
         //initGameMode(game_type);
-        qDebug() << "Client receives READY_OP from server" << '\n';
+        qDebug() << QDateTime::currentMSecsSinceEpoch() << "Client receives READY_OP from server" + opp_ip << '\n';
+        initGameMode(Online);
         timer_init();
         timer->stop();
     }
 
     if (data.op == OPCODE::MOVE_OP) {
-        qDebug() << "Client receives MOVE_OP from server" << '\n';
+        qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Client receives MOVE_OP from server" + opp_ip << data.data1 << '\n';
         pair<int,int> move = index_decode(data.data1);
-        qDebug() << move << '\n';
         clickPosRow = move.first;
         clickPosCol = move.second;
         if (online_player_flag != game->playerFlag)//轮到对方落子
@@ -920,6 +943,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
     }
 
     if (data.op == OPCODE::TIMEOUT_END_OP || data.op == OPCODE::SUICIDE_END_OP || data.op == OPCODE::GIVEUP_END_OP) {
+        timer_init();
         timer->stop();
         if (online_failure) {
             NetworkData GG(data.op,UserName,"All right, I failed");
@@ -932,17 +956,16 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
         }*/
 
         //socket->bye();//离开或胜负已分 断开连接 清空ip与端口信息
-        online_player_flag = true;
-        opp_ip.clear();
-        opp_port = 0;
-        if(game_type == Online&&!online_agreed)
+
+        /*if(game_type == Online && !online_agreed && !online_failure)//是对方输了
         {
+
             NetworkData agagin(OPCODE::READY_OP,UserName,"b");
             socket->send(agagin);
             initGameMode(Online);
             timer_init();
             timer->stop();
-        }
+        }*/
         //reGame();
     }
     if(data.op == OPCODE::LEAVE_OP)
@@ -962,6 +985,8 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
     }
 
     if (data.op == OPCODE::GIVEUP_OP) { //收到对方认输
+        if (online_failure)//是己方输了 确认信息不用回复
+            return;
         timer->stop();
         QMessageBox::information (this, "You win!", "Your opponent has given up");
         game->totalSteps++;
@@ -984,9 +1009,13 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
             ask_keeplogs();//询问是否保存对局记录
             if(game_type == Online&&!online_agreed)
             {
-
-                NetworkData agagin(OPCODE::READY_OP,UserName,"b");
-                socket->send(agagin);
+                QString hold;
+                if (online_player_flag)
+                    hold = "b";
+                else
+                    hold = "w";
+                NetworkData again(OPCODE::READY_OP,UserName,hold);
+                socket->send(again);
                 initGameMode(Online);
                 timer_init();
                 timer->stop();
@@ -996,7 +1025,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
     }
     if (data.op == OPCODE::CHAT_OP) {
         QMessageBox::information (this, "Said to you", data.data1);
-        qDebug() << "Client receives CHAT_OP from server" << '\n';
+        qDebug() << QDateTime::currentMSecsSinceEpoch() << "Client receives CHAT_OP from server" + opp_ip << '\n';
     }
     if(data.op == OPCODE::REJECT_OP) {
         reGame();
@@ -1030,8 +1059,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
     //if (client != socket->base())
     opponent = client;
     if (data.op == OPCODE::READY_OP) {
-        qDebug() << "Server receives READY_OP" << '\n';
-        qDebug() << data.data1 << data.data2 << '\n';
+        qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server receives READY_OP" + opp_ip << '\n';
         if (game->gameStatus != PLAYING) {
             QString opp_hold;
             //last = client;
@@ -1045,7 +1073,6 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
                 online_player_flag = true;
             }
 
-            qDebug() << "Opponent holds " << opp_hold << '\n';
             QString mess = data.data1 + " holding " + opp_hold + " wants to play with you";
             QByteArray ba = mess.toLatin1();
             char *ch;
@@ -1053,11 +1080,12 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
             int res = QMessageBox::question(this, tr("Asking"), tr(ch), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认拒绝
             if (res == QMessageBox::Yes) {
                 game_type = Online;
-                qDebug() << game_type << '\n';
+
                 online_agreed = true;
-                qDebug() << "Online agreed" << '\n';
+
                 NetworkData ready(OPCODE::READY_OP,UserName,"");
                 server->send(opponent,ready);
+                qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server sends ready " + opp_ip << ready.data1 << '\n';
                 initGameMode(game_type);
                 timer_init();
                 timer->stop();
@@ -1065,11 +1093,12 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
             else {
                 NetworkData reject(OPCODE::REJECT_OP,UserName,"");
                 server->send(opponent,reject);
+                qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server sends reject " + opp_ip << reject.data1 << '\n';
             }
         }
     }
     if (data.op == OPCODE::MOVE_OP) {
-        qDebug() << "Server receives MOVE_OP" << '\n';
+        qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Server receives MOVE_OP" << data.data1 << '\n';
         //server->send(socket->base(),data);
 
         pair<int,int> move = index_decode(data.data1);
@@ -1078,12 +1107,14 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
         chessOneByPerson();
     }
     if (data.op == OPCODE::TIMEOUT_END_OP || data.op == OPCODE::SUICIDE_END_OP || data.op == OPCODE::GIVEUP_END_OP) {
+        timer_init();
+        timer->stop();
+        game->gameStatus = DEAD;
         if (online_failure) {
-            timer->stop();
             NetworkData GG(data.op,UserName,"All right, I failed");
             server->send(opponent,GG);//败方回复确认
         }
-        server->leave(opponent);//离开或胜负已分 断开连接 清空ip与端口信息
+        //server->leave(opponent);//离开或胜负已分 断开连接 清空ip与端口信息
         Clients.pop();
         /*if(game_type == Online&&!online_agreed)
         {
@@ -1118,11 +1149,12 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
     }
     if (data.op == OPCODE::GIVEUP_OP) { //收到对方认输
         timer->stop();
-        QMessageBox::information (this, "You win!", "Your opponent has given up");
+        timer_init();
+        timer->stop();//停止计时
         game->totalSteps++;
         game->gameStatus = DEAD;
-        timer->stop();//停止计时
         Logs[!online_player_flag].emplace_back(make_pair('G',0));
+        QMessageBox::information (this, "You win!", "Your opponent has given up");
         NetworkData giveup_end(OPCODE::GIVEUP_END_OP,UserName,"So you have given up");
         server->send(opponent,giveup_end);
         QString str;
@@ -1137,15 +1169,15 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
                                                                                                  +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
         if (btnValue == QMessageBox::Ok) {
             ask_keeplogs();//询问是否保存对局记录
-            initGameMode(Online);
-            if(game_type == Online&&!online_agreed)
+            //initGameMode(Online);
+            /*if(game_type == Online&&!online_agreed)
             {
-                NetworkData agagin(OPCODE::READY_OP,UserName,"b");
-                socket->send(agagin);
+                NetworkData again(OPCODE::READY_OP,UserName,"b");
+                socket->send(again);
                 initGameMode(Online);
                 timer_init();
                 timer->stop();
-            }
+            }*/
             //reGame();
         }
     }
@@ -1158,7 +1190,6 @@ void MainWindow::reSet()
     PORT=this->dialog->ui->PORTEdit->text().toInt();
     //this->reStart();
     //this->reConnect();
-    qDebug() << IP << PORT;
 
     disconnect(this->server,&NetworkServer::receive,this,&MainWindow::receiveData);
     //Clients.pop();
