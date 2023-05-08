@@ -1,9 +1,11 @@
 #ifndef DIALOGCHOOSEMODE_H
 #define DIALOGCHOOSEMODE_H
 
+#include "qevent.h"
 #include <QDialog>
 #include <GameModel.h>
 #include <connectdialog.h>
+#include <QApplication>
 
 namespace Ui {
 class DialogChooseMode;
@@ -16,6 +18,12 @@ class DialogChooseMode : public QDialog
 public:
     QString user_name = "Passerby";
     explicit DialogChooseMode(QWidget *parent = nullptr);
+    void closeEvent(QCloseEvent *event) override
+    {
+        event->accept();
+        QApplication::closeAllWindows();
+        QCoreApplication::quit();
+    }
     ~DialogChooseMode();
     friend class MainWindow;
 

@@ -89,3 +89,4 @@ void DialogChooseMode::on_comboBox_currentIndexChanged(int index)
         pvp_boardsize = 14;
 }
 
+

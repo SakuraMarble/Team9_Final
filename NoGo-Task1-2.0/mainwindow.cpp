@@ -43,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent,QString username)
 
     connect(socket, &NetworkSocket::receive, this, &MainWindow::receive_fromServer);
     connect(socket->base(), &QAbstractSocket::disconnected, [=]() {
-        QMessageBox::critical(this, tr("Connection lost"), tr("Connection to server has closed"));
+        QMessageBox::information(this, tr("Connection lost"), tr("Connection to server has closed"));
     });
     connect(socket->base(), &QAbstractSocket::errorOccurred, this, &MainWindow::displayError);
     connect(socket->base(), &QAbstractSocket::connected, this, &MainWindow::connected);
@@ -214,7 +214,6 @@ void MainWindow::initGame()
     //NoGoAI = new ai;
     //创建消息框
     choosemode();
-
     if (game_type != Online)
         initGameMode(game_type);//Online模式下 主动联机收到READY_OP之后开始游戏 reGame同理
 
@@ -258,6 +257,7 @@ void MainWindow::initGame()
 
 void MainWindow::reGame()
 {
+    this->hide();
     delete btn;
     //view_lose = false;
     logs_empty = false;
@@ -265,7 +265,7 @@ void MainWindow::reGame()
     online_failure = false;
     online_request = false;
     choosemode();
-
+    this->show();
     //if (game_type != Online)
         initGameMode(game_type);
 
@@ -532,6 +532,7 @@ void MainWindow::chessOneByPerson()
                 if(game_type!=Online)
                 reGame();
             }
+            else reGame();
         }
 
         //update();
@@ -602,6 +603,7 @@ void MainWindow::on_pushButton_Surrender_clicked()
         if (game_type != View && game_type!=Online)
             reGame();
     }
+    else reGame();
 }
 
 void MainWindow::timer_init()
@@ -692,6 +694,7 @@ void MainWindow::timelimit_exceeded()
         if(game_type!=Online)
         reGame();
     }
+    else reGame();
 }
 
 /*void MainWindow::buttonClicked(QAbstractButton *butClicked){//选择是否为对阵AI模式
@@ -719,6 +722,7 @@ void MainWindow::on_pushButton_Cheating_clicked()
                                                                          +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
         if (btnValue == QMessageBox::Ok)
             reGame();
+        else reGame();
     }else{
         QMessageBox::warning(this,"Sorry","You're not the VIP or the game type is not PVE,so you can't do this.");
     }
@@ -915,7 +919,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
             chessOneByPerson();
     }
 
-    if (data.op == OPCODE::LEAVE_OP || data.op == OPCODE::TIMEOUT_END_OP || data.op == OPCODE::SUICIDE_END_OP || data.op == OPCODE::GIVEUP_END_OP) {
+    if (data.op == OPCODE::TIMEOUT_END_OP || data.op == OPCODE::SUICIDE_END_OP || data.op == OPCODE::GIVEUP_END_OP) {
         if (online_failure) {
             NetworkData GG(data.op,UserName,"All right, I failed");
             socket->send(GG);//败方回复确认
@@ -939,6 +943,20 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
             timer->stop();
         }
         //reGame();
+    }
+    if(data.op == OPCODE::LEAVE_OP)
+    {
+        QDialog * left = new QDialog(this);
+        left->setWindowTitle("Your opponent has left");
+        QLabel * reason = new QLabel(left);
+        reason->setText(data.data1+" 潇洒离开时丢下一句话: "+data.data2);
+        QPushButton * confirm = new QPushButton("OK",left);
+        QLayout * layout = new QVBoxLayout(left);
+        layout->addWidget(reason);
+        layout->addWidget(confirm);
+        left->resize(400,25);
+        left->show();
+        connect(confirm,&QPushButton::clicked,this,[=](){delete left;socket->bye();reGame();});
     }
 
     if (data.op == OPCODE::GIVEUP_OP) { //收到对方认输
@@ -1076,10 +1094,19 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
     }
     if( data.op == OPCODE::LEAVE_OP)
     {
-        QMessageBox::information(this,"Your opponent has left",data.data1+": "+data.data2);
+        QDialog * left = new QDialog(this);
+        left->setWindowTitle("Your opponent has left");
+        QLabel * reason = new QLabel(left);
+        reason->setText(data.data1+" 潇洒离开时丢下一句话: "+data.data2);
+        QPushButton * confirm = new QPushButton("OK",left);
+        QLayout * layout = new QVBoxLayout(left);
+        layout->addWidget(reason);
+        layout->addWidget(confirm);
+        left->resize(400,25);
+        left->show();
+        connect(confirm,&QPushButton::clicked,this,[=](){delete left;reGame();});
         server->leave(opponent);
         Clients.pop();
-        reGame();
     }
     if( data.op == OPCODE::CHAT_OP)
     {
@@ -1148,22 +1175,30 @@ void MainWindow::leaveGame()
     //if(!online_agreed)
     //{
         int ret = QMessageBox::question(this,"Confirm","Really leaving the game?",QMessageBox::Yes | QMessageBox::No,QMessageBox::No);
-        if(ret == QMessageBox::Yes){
-        QDialog * askWhy = new QDialog(this);
-        askWhy->setWindowTitle("Send the reason of leaving");
-        askWhy->resize(300,25);
-        QLayout* layout = new QVBoxLayout(askWhy);
-        QLineEdit * reason = new QLineEdit(askWhy);
-        reason->setText("宁的棋下的也忒好啦,溜了溜了");
-        QPushButton * sendMessage = new QPushButton("send the message",askWhy);
-        NetworkData * lea = new NetworkData(OPCODE::LEAVE_OP,this->UserName,reason->text());
-        publicNetworkdata = lea;
-        layout->addWidget(reason);
-        layout->addWidget(sendMessage);
-        setLayout(layout);
-        askWhy->exec();
+        if(ret == QMessageBox::Yes)
+        {
+            QDialog * askWhy = new QDialog(this);
+            askWhy->setWindowTitle("Send the reason of leaving");
+            askWhy->resize(300,25);
+            QLayout* layout = new QVBoxLayout(askWhy);
+            QLineEdit * reason = new QLineEdit(askWhy);
+            reason->setText("宁的棋下的也忒好啦,溜了溜了");
+            QPushButton * sendMessage = new QPushButton("send the message",askWhy);
+            //publicNetworkdata = lea;
+            layout->addWidget(reason);
+            layout->addWidget(sendMessage);
+            askWhy->setLayout(layout);
+            askWhy->show();
+            if(!online_agreed)
+            {
+                connect(sendMessage,&QPushButton::clicked,this,[=](){NetworkData lea(OPCODE::LEAVE_OP,this->UserName,reason->text());socket->send(lea);socket->bye();delete askWhy;reGame();});
+            }
+            if(online_agreed)
+            {
+                connect(sendMessage,&QPushButton::clicked,this,[=](){NetworkData lea(OPCODE::LEAVE_OP,this->UserName,reason->text());server->send(opponent,lea);server->leave(opponent),Clients.pop();
+                            reGame();delete askWhy;});
+            }
         }
-
     //}
 }
 void MainWindow::on_pushButton_Chat_clicked(){
