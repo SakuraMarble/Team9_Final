@@ -521,6 +521,15 @@ void MainWindow::chessOneByPerson()
                                                                          +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
             if (btnValue == QMessageBox::Ok) {
                 ask_keeplogs();//询问是否保存对局记录
+                if(game_type == Online&&!online_agreed)
+                {
+                    NetworkData agagin(OPCODE::READY_OP,UserName,"b");
+                    socket->send(agagin);
+                    initGameMode(Online);
+                    timer_init();
+                    timer->stop();
+                }
+                if(game_type!=Online)
                 reGame();
             }
         }
@@ -581,7 +590,16 @@ void MainWindow::on_pushButton_Surrender_clicked()
                                                                      +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
     if (btnValue == QMessageBox::Ok) {
         ask_keeplogs();//询问是否保存对局记录
-        if (game_type != View)
+        if(game_type == Online&&!online_agreed)
+        {
+
+            NetworkData agagin(OPCODE::READY_OP,UserName,"b");
+            socket->send(agagin);
+            initGameMode(Online);
+            timer_init();
+            timer->stop();
+        }
+        if (game_type != View && game_type!=Online)
             reGame();
     }
 }
@@ -662,6 +680,16 @@ void MainWindow::timelimit_exceeded()
                                                                      +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
     if (btnValue == QMessageBox::Ok) {
         ask_keeplogs();//询问是否保存对局记录
+        if(game_type == Online&&!online_agreed)
+        {
+
+            NetworkData agagin(OPCODE::READY_OP,UserName,"b");
+            socket->send(agagin);
+             initGameMode(Online);
+             timer_init();
+             timer->stop();
+        }
+        if(game_type!=Online)
         reGame();
     }
 }
@@ -846,7 +874,8 @@ void MainWindow::choose_logs()
 void MainWindow::displayError()//连接失败
 {
     QMessageBox::warning(nullptr, "Oops!", "Connection Failure!");
-    reGame();
+    QCoreApplication::quit();
+    //reGame();
 }
 
 void MainWindow::connected()//连接成功 主动连接 用户作为客户端连接到作为服务端的远程机器
@@ -891,17 +920,25 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
             NetworkData GG(data.op,UserName,"All right, I failed");
             socket->send(GG);//败方回复确认
         }
-        int ret = QMessageBox::question(this,tr("Asking"),tr("Do you want to play again with your opponent?"),QMessageBox::Yes | QMessageBox::No,QMessageBox::No);
+        //int ret = QMessageBox::question(this,tr("Asking"),tr("Do you want to play again with your opponent?"),QMessageBox::Yes | QMessageBox::No,QMessageBox::No);
         /*if(ret == QMessageBox::Yes)
         {
             socket
         }*/
 
-        socket->bye();//离开或胜负已分 断开连接 清空ip与端口信息
+        //socket->bye();//离开或胜负已分 断开连接 清空ip与端口信息
         online_player_flag = true;
         opp_ip.clear();
         opp_port = 0;
-        reGame();
+        if(game_type == Online&&!online_agreed)
+        {
+            NetworkData agagin(OPCODE::READY_OP,UserName,"b");
+            socket->send(agagin);
+            initGameMode(Online);
+            timer_init();
+            timer->stop();
+        }
+        //reGame();
     }
 
     if (data.op == OPCODE::GIVEUP_OP) { //收到对方认输
@@ -924,15 +961,26 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
                                                                                                  +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
         if (btnValue == QMessageBox::Ok) {
             ask_keeplogs();//询问是否保存对局记录
-            reGame();
+            if(game_type == Online&&!online_agreed)
+            {
+
+                NetworkData agagin(OPCODE::READY_OP,UserName,"b");
+                socket->send(agagin);
+                initGameMode(Online);
+                timer_init();
+                timer->stop();
+            }
+           // reGame();
         }
     }
-    if (data.op == OPCODE::CHAT_OP) { //收到对方认输
+    if (data.op == OPCODE::CHAT_OP) {
         QMessageBox::information (this, "Said to you", data.data1);
         qDebug() << "Client receives CHAT_OP from server" << '\n';
     }
     if(data.op == OPCODE::REJECT_OP) {
         reGame();
+        QMessageBox::information(this,"Sorry","You're rejected by your opponent");
+
     }
 }
 
@@ -1015,7 +1063,16 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
         }
         server->leave(opponent);//离开或胜负已分 断开连接 清空ip与端口信息
         Clients.pop();
-        reGame();
+        if(game_type == Online&&!online_agreed)
+        {
+
+            NetworkData agagin(OPCODE::READY_OP,UserName,"b");
+            socket->send(agagin);
+            initGameMode(Online);
+            timer_init();
+            timer->stop();
+        }
+        //reGame();
     }
     if( data.op == OPCODE::LEAVE_OP)
     {
@@ -1048,7 +1105,16 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
                                                                                                  +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
         if (btnValue == QMessageBox::Ok) {
             ask_keeplogs();//询问是否保存对局记录
-            reGame();
+            initGameMode(Online);
+            if(game_type == Online&&!online_agreed)
+            {
+                NetworkData agagin(OPCODE::READY_OP,UserName,"b");
+                socket->send(agagin);
+                initGameMode(Online);
+                timer_init();
+                timer->stop();
+            }
+            //reGame();
         }
     }
 }
