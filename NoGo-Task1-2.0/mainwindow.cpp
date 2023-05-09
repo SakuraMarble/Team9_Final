@@ -297,6 +297,7 @@ void MainWindow::reGame()
 void MainWindow::initGameMode(GameType type)
 {
     dialog->hide();
+    online_failure = false;
     game->totalSteps=0;
     game->totalTime=0;
     game->gameType = type;
@@ -580,7 +581,6 @@ void MainWindow::on_pushButton_Surrender_clicked()
 
     else
         str = "The black"; //白色认输黑色win！
-
     if (game_type == Online) {
         NetworkData give_up(OPCODE::GIVEUP_OP,UserName,"QAQ");
         online_failure = true;
