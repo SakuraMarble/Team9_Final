@@ -552,7 +552,8 @@ void MainWindow::chessOneOnline()
     if (online_player_flag == game->playerFlag) { //轮到己方下棋
         if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1 && !view_lose)
         {
-            NetworkData move = NetworkData(OPCODE::MOVE_OP,index_encode(clickPosRow,clickPosCol),"");
+            QString time = QString::number(QDateTime::currentMSecsSinceEpoch());
+            NetworkData move = NetworkData(OPCODE::MOVE_OP,index_encode(clickPosRow,clickPosCol),time);
             if (!online_agreed) {
                 qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Client sends move" + opp_ip << move.data1 << '\n';
                 socket->send(move);
