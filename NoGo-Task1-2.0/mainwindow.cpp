@@ -1220,12 +1220,11 @@ void MainWindow::leaveGame()
             askWhy->show();
             if(!online_agreed)
             {
-                connect(sendMessage,&QPushButton::clicked,this,[=](){NetworkData lea(OPCODE::LEAVE_OP,this->UserName,reason->text());socket->send(lea);socket->bye();delete askWhy;reGame();});
+                connect(sendMessage,&QPushButton::clicked,this,[=](){NetworkData lea(OPCODE::LEAVE_OP,this->UserName,reason->text());timer->stop();socket->send(lea);socket->bye();delete askWhy;reGame();});
             }
             if(online_agreed)
             {
-                connect(sendMessage,&QPushButton::clicked,this,[=](){NetworkData lea(OPCODE::LEAVE_OP,this->UserName,reason->text());server->send(opponent,lea);server->leave(opponent),Clients.pop();
-                            reGame();delete askWhy;});
+                connect(sendMessage,&QPushButton::clicked,this,[=](){NetworkData lea(OPCODE::LEAVE_OP,this->UserName,reason->text());timer->stop();server->send(opponent,lea);server->leave(opponent),Clients.pop();delete askWhy;reGame();});
             }
         }
     //}
