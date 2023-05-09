@@ -449,7 +449,7 @@ void MainWindow::chessOneByPerson()
                 str = "The black"; //白色无子黑色win！
             QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins！");
             if (btnValue == QMessageBox::Ok) {
-                ask_keeplogs();//询问是否保存对局记录
+                ask_keeplogs(str);//询问是否保存对局记录
                 view_lose = true;
                 //reGame();
                 //return;
@@ -516,11 +516,9 @@ void MainWindow::chessOneByPerson()
                 str = "The black";
             lose = true;//用于对局return
 
-        QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
-                                                                         +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
-                                                                         +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
-            if (btnValue == QMessageBox::Ok) {
-                ask_keeplogs();//询问是否保存对局记录
+
+
+                ask_keeplogs(str);//询问是否保存对局记录
                 if(game_type == Online&&!online_agreed)
                 {
                     QString hold;
@@ -536,8 +534,8 @@ void MainWindow::chessOneByPerson()
                 }
                 if(game_type!=Online)
                     reGame();
-            }
-            else reGame();
+
+
         }
 
         //update();
@@ -563,6 +561,7 @@ void MainWindow::chessOneOnline()
                 server->send(opponent,move);
             }
             chessOneByPerson();
+            repaint();
         }
     }
 }
@@ -595,11 +594,9 @@ void MainWindow::on_pushButton_Surrender_clicked()
         }
     }
 
-    QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
-                                                                     +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
-                                                                     +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
-    if (btnValue == QMessageBox::Ok) {
-        ask_keeplogs();//询问是否保存对局记录
+
+
+        ask_keeplogs(str);//询问是否保存对局记录
         if(game_type == Online&&!online_agreed)
         {
             QString hold;
@@ -616,8 +613,8 @@ void MainWindow::on_pushButton_Surrender_clicked()
         }
         if (game_type != View && game_type!=Online)
             reGame();
-    }
-    else reGame();
+
+
 }
 
 void MainWindow::timer_init()
@@ -696,11 +693,7 @@ void MainWindow::timelimit_exceeded()
     else
         str = "The black"; //白色TL黑色win！
 
-    QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
-                                                                     +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
-                                                                     +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
-    if (btnValue == QMessageBox::Ok) {
-        ask_keeplogs();//询问是否保存对局记录
+    ask_keeplogs(str);//询问是否保存对局记录
         if(game_type == Online&&!online_agreed)
         {
             QString hold;
@@ -716,8 +709,7 @@ void MainWindow::timelimit_exceeded()
         }
         if(game_type!=Online)
         reGame();
-    }
-    else reGame();
+
 }
 
 /*void MainWindow::buttonClicked(QAbstractButton *butClicked){//选择是否为对阵AI模式
@@ -794,10 +786,12 @@ void MainWindow::choosemode()
     //delete dialog;
 }
 
-void MainWindow::ask_keeplogs()
+void MainWindow::ask_keeplogs(QString str)
 {
 
-    int res = QMessageBox::question(this, tr("Asking"), tr("Whether to keep logs?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认不保存
+    int res = QMessageBox::question(this, tr("NoGo Result:"), str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
+                                                           +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
+                                                           +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s"+"\n \n Whether to keep logs?", QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认不保存
     if (res == QMessageBox::Yes && game_type != View) {
     
         //用户选择保存记录
@@ -940,6 +934,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
         clickPosCol = move.second;
         if (online_player_flag != game->playerFlag)//轮到对方落子
             chessOneByPerson();
+        repaint();
     }
 
     if (data.op == OPCODE::TIMEOUT_END_OP || data.op == OPCODE::SUICIDE_END_OP || data.op == OPCODE::GIVEUP_END_OP) {
@@ -1002,11 +997,9 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
         else
             str = "The black"; //白色认输黑色win！
 
-        QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
-                                                                                                 +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
-                                                                                                 +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
-        if (btnValue == QMessageBox::Ok) {
-            ask_keeplogs();//询问是否保存对局记录
+
+
+        ask_keeplogs(str);//询问是否保存对局记录
             if(game_type == Online&&!online_agreed)
             {
                 QString hold;
@@ -1021,7 +1014,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
                 timer->stop();
             }
            // reGame();
-        }
+
     }
     if (data.op == OPCODE::CHAT_OP) {
         QMessageBox::information (this, "Said to you", data.data1);
@@ -1105,6 +1098,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
         clickPosRow = move.first;
         clickPosCol = move.second;
         chessOneByPerson();
+        repaint();
     }
     if (data.op == OPCODE::TIMEOUT_END_OP || data.op == OPCODE::SUICIDE_END_OP || data.op == OPCODE::GIVEUP_END_OP) {
         timer_init();
@@ -1164,11 +1158,9 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
         else
             str = "The black"; //白色认输黑色win！
 
-        QMessageBox::StandardButton btnValue = QMessageBox::information (this, "NoGo Result", str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
-                                                                                                 +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
-                                                                                                 +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s");
-        if (btnValue == QMessageBox::Ok) {
-            ask_keeplogs();//询问是否保存对局记录
+
+
+        ask_keeplogs(str);//询问是否保存对局记录
             //initGameMode(Online);
             /*if(game_type == Online&&!online_agreed)
             {
@@ -1179,7 +1171,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
                 timer->stop();
             }*/
             //reGame();
-        }
+
     }
 }
 

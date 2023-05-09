@@ -105,7 +105,7 @@ private:
 
     void timelimit_exceeded();//超时
     void timer_update();//重新倒计时
-    void ask_keeplogs();//询问是否保存对局记录
+    void ask_keeplogs(QString str);//询问是否保存对局记录
     void choose_logs();//View复现模式下选择本地存档
 
     void choosemode();//开局或重开选择模式&设置时间限制
