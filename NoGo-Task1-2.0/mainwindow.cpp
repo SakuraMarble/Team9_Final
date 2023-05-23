@@ -519,22 +519,22 @@ void MainWindow::chessOneByPerson()
 
 
 
-                ask_keeplogs(str);//询问是否保存对局记录
-                if(game_type == Online&&!online_agreed)
-                {
-                    QString hold;
-                    if (online_player_flag)
-                        hold = "b";
-                    else
-                        hold = "w";
-                    NetworkData again(OPCODE::READY_OP,UserName,hold);
-                    socket->send(again);
-                    initGameMode(Online);
-                    timer_init();
-                    timer->stop();
-                }
-                if(game_type!=Online)
-                    reGame();
+            ask_keeplogs(str);//询问是否保存对局记录
+            /*if(game_type == Online&&!online_agreed)
+            {
+                QString hold;
+                if (online_player_flag)
+                hold = "b";
+                else
+                hold = "w";
+                NetworkData again(OPCODE::READY_OP,UserName,hold);
+                socket->send(again);
+                initGameMode(Online);
+                timer_init();
+                timer->stop();
+            }*/
+            if(game_type!=Online)
+            reGame();
 
 
         }
@@ -835,6 +835,51 @@ void MainWindow::ask_keeplogs(QString str)
             Logs[i].clear();
     }
     //清空记录
+    if(game_type == Online)
+    {
+        QDialog *ask = new QDialog(this);
+        QLabel *askLabel = new QLabel(tr("Do you want to play again with your opponent?"));
+
+        QRadioButton* blackRadio = new QRadioButton(tr("Hold Black"));
+        QRadioButton* whiteRadio = new QRadioButton(tr("Hold White"));
+        QButtonGroup* colorGroup = new QButtonGroup(this);
+        colorGroup->addButton(blackRadio);
+        colorGroup->addButton(whiteRadio);
+        QPushButton* btn1 = new QPushButton(ask);
+        QPushButton* btn2 = new QPushButton(ask);
+        btn1->setText("Yes");
+        btn2->setText("No");
+        //connectButton = new QPushButton(tr("Connect"));
+        connect(btn1,&QPushButton::clicked,this,[=]()
+        {
+            /*设置好hold的颜色，并且发起连接！*/
+            online_player_flag = blackRadio->isChecked();
+            if(!online_agreed)
+            {
+                    QString hold;
+                    if (online_player_flag)
+                        hold = "b";
+                    else
+                        hold = "w";
+                    NetworkData again(OPCODE::READY_OP,UserName,hold);
+                    socket->send(again);
+                    initGameMode(Online);
+                    timer_init();
+                    timer->stop();
+            }
+        });
+        connect(btn2,&QPushButton::clicked,this,[=](){delete ask;});
+        QGridLayout *layout = new QGridLayout;
+        layout->addWidget(askLabel, 0, 0);
+        layout->addWidget(blackRadio, 1, 0);
+        layout->addWidget(whiteRadio, 1, 1);
+        layout->addWidget(btn1,2,0);
+        layout->addWidget(btn2,2,1);
+        //layout->addWidget(connectButton, 3, 0, 1, 2);
+        ask->setLayout(layout);
+        ask->exec();
+    }
+
 }
 
 void MainWindow::choose_logs()
