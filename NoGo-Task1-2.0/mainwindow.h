@@ -71,7 +71,10 @@ private:
     bool online_failure = false;//联机对战己方是否失败
     bool online_agreed = false;//是否同意某客户端的联机请求
     bool online_request = false;//是否主动发起过连接
+    bool online_WhetherHavePlayed = false;//是否对战过
+    bool isWaiting = false;//是否是等待对方接受对局的状态
 
+    QDialog *ask;
     QString opp_ip;
     quint16 opp_port = 0;
     QString IP;
