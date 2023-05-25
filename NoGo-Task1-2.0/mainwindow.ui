@@ -93,6 +93,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="UseAI">
+       <property name="text">
+        <string>Switch</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="Chat">
        <property name="text">
         <string>Chat(Valid in Online PvP)</string>

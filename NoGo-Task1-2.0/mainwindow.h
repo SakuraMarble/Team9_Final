@@ -63,6 +63,7 @@ private:
     int clickPosRow,clickPosCol; // 存储即将点击的位置
     int lst_flg=3373;//在进行提示时，不会重复运算。
     pii ai_ret;//记录ai选择
+    bool IfUsingAI[2]={false,false};//是否使用AI
     bool selectPos = false; // 是否移动到合适的位置，以选中某个交叉点
     bool lose = false;//解决AI重开先后手问题
     bool view_lose = false;//解决复现输赢
@@ -110,7 +111,8 @@ private:
     void timer_update();//重新倒计时
     void ask_keeplogs(QString str);//询问是否保存对局记录
     void choose_logs();//View复现模式下选择本地存档
-
+    void on_pushButton_UseAI_clicked();//托管
+    void on_pushButton_Chat_clicked();
     void choosemode();//开局或重开选择模式&设置时间限制
 private slots:
     void on_pushButton_Surrender_clicked();//认输
@@ -122,7 +124,6 @@ private slots:
     void connected();
     void reSet();
     void leaveGame();
-    void on_pushButton_Chat_clicked();
 };
 
 

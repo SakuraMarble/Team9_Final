@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent,QString username)
     ui->setupUi(this);
 
     connect(ui->Chat,&QPushButton::clicked,this,&MainWindow::on_pushButton_Chat_clicked);
+    connect(ui->UseAI,&QPushButton::clicked,this,&MainWindow::on_pushButton_UseAI_clicked);
     //setMouseTracking(true);
     // 设置窗口大小
     setFixedSize(
@@ -68,9 +69,6 @@ MainWindow::MainWindow(QWidget *parent,QString username)
 MainWindow::~MainWindow()
 {
     delete ui;
-}
-void Chat(){
-
 }
 //实现paintEvent方法
 void MainWindow::paintEvent(QPaintEvent * event)
@@ -145,7 +143,8 @@ void MainWindow::paintEvent(QPaintEvent * event)
         painter.drawRect(MARGIN + BLOCK_SIZE * clickPosCol - MARK_SIZE / 2, MARGIN + BLOCK_SIZE * clickPosRow - MARK_SIZE / 2,MARK_SIZE,MARK_SIZE);
     }
 
-    if(game_type==AI){//PVE给玩家提示
+    //if(game_type==AI)
+    {//PVE给玩家提示
         if(game->playerFlag!=lst_flg){
             lst_flg=game->playerFlag;
         ai_ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);
@@ -193,8 +192,8 @@ void MainWindow::paintEvent(QPaintEvent * event)
                 painter.setBrush(gradient);
                 painter.drawEllipse(MARGIN + BLOCK_SIZE * j - CHESS_RADIUS ,MARGIN + BLOCK_SIZE * i - CHESS_RADIUS ,CHESS_RADIUS * 2,CHESS_RADIUS * 2);
             }
-            else if(game_type==AI){//指出不能走的地方
-                if(!newai.ai_try(game->gameMapVec,i,j,game->playerFlag,BOARD_GRAD_SIZE)){
+            else //if(game_type==AI)指出不能走的地方
+                {if(!newai.ai_try(game->gameMapVec,i,j,game->playerFlag,BOARD_GRAD_SIZE)){
                     QLinearGradient gradient(MARGIN + BLOCK_SIZE * j - 0.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * i - 0.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * j , MARGIN + BLOCK_SIZE * i);
 
                     gradient.setColorAt(1, Qt::red);
@@ -538,10 +537,17 @@ void MainWindow::chessOneByPerson()
 
 
         }
-
         //update();
         if (game_type != View)
             timer_update();//重新倒计时
+        if(IfUsingAI[game->playerFlag]){
+            ai newai;
+            pii ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
+            clickPosRow=ret.first; clickPosCol=ret.second;
+
+            chessOneOnline();
+        }
+
     }
     if (view_lose)
         reGame();
@@ -1184,7 +1190,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
 
                 NetworkData ready(OPCODE::READY_OP,UserName,"");
                 server->send(opponent,ready);
-                qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server sends ready " + opp_ip<<"This is playing again" << ready.data1 << '\n';
+                qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server sends ready again " + opp_ip<<"This is playing again" << ready.data1 << '\n';
                 initGameMode(game_type);
                 timer_init();
                 timer->stop();
@@ -1343,3 +1349,9 @@ void MainWindow::on_pushButton_Chat_clicked(){
     dialog2->setsocket(socket,server,opponent,online_agreed);
     dialog2->exec();
 };
+void MainWindow::on_pushButton_UseAI_clicked(){
+
+    if (game->gameType == Online && online_player_flag != game->playerFlag)//不是用户下棋的时机
+        return;
+    IfUsingAI[game->playerFlag]=!IfUsingAI[game->playerFlag];
+}
