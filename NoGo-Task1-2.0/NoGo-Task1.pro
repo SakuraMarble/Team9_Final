@@ -21,6 +21,7 @@ SOURCES += \
     networkserver.cpp \
     networksocket.cpp \
     nogo_ai.cpp \
+    online_ai_helper.cpp \
     signinwindow.cpp
 
 HEADERS += \
@@ -33,6 +34,7 @@ HEADERS += \
     networkserver.h \
     networksocket.h \
     nogo_ai.h \
+    online_ai_helper.h \
     signinwindow.h
 
 FORMS += \

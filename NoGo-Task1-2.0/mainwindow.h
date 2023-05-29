@@ -16,6 +16,7 @@
 #include <QDir>
 #include <QFileDialog>
 #include <nogo_ai.h>
+#include <online_ai_helper.h>
 #include <dialogchoosemode.h>
 
 #include <networkdata.h>
@@ -92,6 +93,8 @@ private:
     QPushButton *btn = nullptr; //用来leave op的按钮；
     NetworkData * publicNetworkdata = nullptr; //所有类内函数均可访问的数据，用来实现不同函数之间的联系
 
+    Online_Ai_Helper* online_ai = nullptr;// 用于托管的AI
+
     // 绘制
     void paintEvent(QPaintEvent * event);
 
@@ -124,6 +127,8 @@ private slots:
     void connected();
     void reSet();
     void leaveGame();
+
+    void online_ai_finished(pii res);//接收计算结果
 };
 
 
