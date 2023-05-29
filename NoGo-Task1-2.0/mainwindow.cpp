@@ -31,8 +31,8 @@ MainWindow::MainWindow(QWidget *parent,QString username)
     PORT = 16667;
     opponent = nullptr;
 
-    online_ai = new Online_Ai_Helper;
-    connect(online_ai, &Online_Ai_Helper::finished, this, &MainWindow::online_ai_finished);
+    //online_ai = new Online_Ai_Helper;
+    //connect(online_ai, &Online_Ai_Helper::finished, this, &MainWindow::online_ai_finished);
 
     dialog = new DialogChooseMode;
     dialog->hide();
@@ -1421,7 +1421,8 @@ void MainWindow::on_pushButton_UseAI_clicked(){
     IfUsingAI[online_player_flag] = !IfUsingAI[online_player_flag];
 
     if (IfUsingAI[online_player_flag]) {
-        //online_ai = new Online_Ai_Helper;
+        online_ai = new Online_Ai_Helper;
+        connect(online_ai, &Online_Ai_Helper::finished, this, &MainWindow::online_ai_finished);
         // 创建线程池
         //QThreadPool::globalInstance()->start(online_ai);
     }
