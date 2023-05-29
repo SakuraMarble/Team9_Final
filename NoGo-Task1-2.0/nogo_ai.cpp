@@ -60,7 +60,7 @@ int ai::ai_calc(brd &board,int use,int size){
             }
         return val;
     }
-pii ai::run(brd &board,int use,int size){
+pii ai::thinking(brd &board,int use,int size){
     //程序的接口
         const int enemy=1-use;
         int worth[size][size];

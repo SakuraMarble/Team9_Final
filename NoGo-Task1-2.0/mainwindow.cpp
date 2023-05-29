@@ -31,6 +31,9 @@ MainWindow::MainWindow(QWidget *parent,QString username)
     PORT = 16667;
     opponent = nullptr;
 
+    online_ai = new Online_Ai_Helper;
+    connect(online_ai, &Online_Ai_Helper::finished, this, &MainWindow::online_ai_finished);
+
     dialog = new DialogChooseMode;
     dialog->hide();
 
@@ -147,7 +150,7 @@ void MainWindow::paintEvent(QPaintEvent * event)
     {//PVE给玩家提示
         if(game->playerFlag!=lst_flg){
             lst_flg=game->playerFlag;
-        ai_ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);
+        ai_ret=newai.thinking(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);
         }
         int chosx=ai_ret.first,chosy=ai_ret.second;
         QLinearGradient gradient(MARGIN + BLOCK_SIZE * chosy - 1.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * chosx - 1.5 * CHESS_RADIUS, MARGIN + BLOCK_SIZE * chosy , MARGIN + BLOCK_SIZE * chosx);
@@ -315,7 +318,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
     // 通过鼠标的hover确定落子的标记
     int x = event->position().x();
     int y = event->position().y();
-    qDebug()<<"mousemoving";
+    //qDebug()<<"mousemoving";
     //棋盘n边缘不能落子
     if (x>=MARGIN + BLOCK_SIZE / 2 &&
             x < size().width() - MARGIN - BLOCK_SIZE / 2 &&
@@ -428,7 +431,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
     }
     if (game_type == AI) { //人机模式
         ai newai;
-        pii ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
+        pii ret=newai.thinking(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
         clickPosRow=ret.first; clickPosCol=ret.second;
 
         chessOneByPerson();//其实是ByAI
@@ -543,10 +546,20 @@ void MainWindow::chessOneByPerson()
         if (game_type != View)
             timer_update();//重新倒计时
         if(IfUsingAI[game->playerFlag]){
-            ai newai;
-            pii ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
+            if (online_ai) {
+                //delete online_ai;
+                online_ai = nullptr;
+            }
+            online_ai = new Online_Ai_Helper;
+            connect(online_ai, &Online_Ai_Helper::finished, this, &MainWindow::online_ai_finished);
+            qDebug() << "new runnable\n";
+            online_ai->send_mes(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
+            QThreadPool::globalInstance()->start(online_ai);
+            qDebug() << "new start\n";
+            /*ai newai;
+            pii ret=newai.thinking(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
             clickPosRow=ret.first; clickPosCol=ret.second;
-            chessOneOnline();
+            chessOneOnline();*/
         } // 敌方下棋之后 AI托管模式下立即下棋
     }
     if (view_lose)
@@ -651,7 +664,7 @@ void MainWindow::timer_init()
     qDebug()<<"timer_init1";
     if (timer) {
         delete timer;
-            timer = nullptr;
+        timer = nullptr;
     }
 
     qDebug()<<"timer_init1.1";
@@ -1406,11 +1419,33 @@ void MainWindow::on_pushButton_UseAI_clicked(){
         //return;
     //IfUsingAI[game->playerFlag]=!IfUsingAI[game->playerFlag];
     IfUsingAI[online_player_flag] = !IfUsingAI[online_player_flag];
-    qDebug() << online_player_flag << "switch\n";
-    if(IfUsingAI[online_player_flag] && online_player_flag == game->playerFlag){ //如果在己方轮次进入托管 立即由AI下棋
-            ai newai;
-            pii ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
-            clickPosRow=ret.first; clickPosCol=ret.second;
-            chessOneOnline();
+
+    if (IfUsingAI[online_player_flag]) {
+        //online_ai = new Online_Ai_Helper;
+        // 创建线程池
+        //QThreadPool::globalInstance()->start(online_ai);
     }
+    else {
+        /*QThreadPool::globalInstance()->waitForDone();
+        online_ai->deleteLater();
+        online_ai = nullptr;*/
+    } //退出托管模式
+
+    //qDebug() << online_player_flag << "switch\n";
+    if(IfUsingAI[online_player_flag] && online_player_flag == game->playerFlag){ //如果在己方轮次进入托管 立即由AI下棋
+            //ai newai;
+            online_ai->send_mes(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
+            QThreadPool::globalInstance()->start(online_ai);
+            //pii ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
+            //clickPosRow=ret.first; clickPosCol=ret.second;
+            //chessOneOnline();
+    }
+}
+
+void MainWindow::online_ai_finished(pii result)
+{
+    clickPosRow = result.first;
+    clickPosCol = result.second;
+    qDebug() << "AI gave a result\n";
+    chessOneOnline();
 }
