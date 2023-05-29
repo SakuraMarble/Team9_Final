@@ -482,7 +482,7 @@ void MainWindow::chessOneByPerson()
 
     // 根据当前存储的坐标下子
     // 只有有效点击才行，并且该处没有子
-    if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1 && !view_lose)
+    if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1 && !view_lose && game->gameStatus!=DEAD)
     {
         game->totalSteps++;
         if(game->playerFlag == true)
@@ -569,7 +569,7 @@ void MainWindow::chessOneByPerson()
 void MainWindow::chessOneOnline()
 {
     if (online_player_flag == game->playerFlag) { //轮到己方下棋 online_player_flag是自己这边在网络对战中的执子类型
-        if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1 && !view_lose)
+        if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1 && !view_lose && game->gameStatus!=DEAD)
         {
             QString time = QString::number(QDateTime::currentMSecsSinceEpoch());
             NetworkData move = NetworkData(OPCODE::MOVE_OP,index_encode(clickPosRow,clickPosCol),time);
@@ -636,10 +636,10 @@ void MainWindow::on_pushButton_Surrender_clicked()
         Logs[game->playerFlag].emplace_back(make_pair('G',0));
     QString str;
     if (game->playerFlag)
-        str = "The white"; //黑色认输白色赢！
+        str = "The white(because the opponent gave up)"; //黑色认输白色赢！
 
     else
-        str = "The black"; //白色认输黑色win！
+        str = "The black(because the opponent gave up)"; //白色认输黑色win！
     if (game_type == Online) {
         NetworkData give_up(OPCODE::GIVEUP_OP,UserName,"QAQ");
         online_failure = true;
@@ -673,7 +673,7 @@ void MainWindow::timer_init()
 
     qDebug()<<"timer_init1.2";
     //countlabel->setGeometry(QRect(280,0,60,25));
-    countlabel->setStyleSheet("font-family:\"Lucida Handwriting\";font-size:16px;");
+    countlabel->setStyleSheet("font-family:\"Lucida Handwriting\";font-size:16px;color:black");
     //countlabel->setAlignment(Qt::AlignHCenter);
     timer->setInterval(1000);//1s刷新一次
     TimerCountNumber = TimerLimit;
@@ -702,6 +702,9 @@ void MainWindow::TimerCount()
     if(TimerCountNumber <= 5)
     {
         countlabel->setStyleSheet("font-family:\"Lucida Handwriting\";font-size:16px;color:red;");
+    }
+    else{
+        countlabel->setStyleSheet("font-family:\"Lucida Handwriting\";font-size:16px;color:black;");
     }
     if (!TimerCountNumber) {
         timer->stop();
@@ -828,12 +831,178 @@ void MainWindow::choosemode()
 
 void MainWindow::ask_keeplogs(QString str)
 {
+    game->gameStatus=DEAD;
+    //一般对战情况，只需要显示这个，不需要显示是否再来一局
+    if(game_type == MAN ||game_type == AI)
+    {
+    end = new QDialog(this);
+    QLabel *endInformation = new QLabel(str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
+                                           +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
+                                           +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s"+"\n \n Whether to keep logs?",end);
+    QPushButton* btn1 = new QPushButton(end);
+    QPushButton* btn2 = new QPushButton(end);
+    btn1->setText("Yes");
+    btn2->setText("No");
+    connect(btn1,&QPushButton::clicked,this,[=](){
+        //用户选择保存记录
+        auto now_time = std::chrono::system_clock::now();//获取时间
+        auto timestamp = std::chrono::system_clock::to_time_t(now_time);//转换成本地时间
+        std::stringstream log_time;
+        log_time << std::put_time(std::localtime(&timestamp), "%Y-%m-%d_%H.%M.%S");//规范时间格式 不能有'/' ':'
+        QString filename = "Log_" + QString::fromStdString(log_time.str()) + ".txt";
+        QString filepath = dir.absoluteFilePath(filename);
+        std::ofstream out(filepath.toStdString());
 
-    int res = QMessageBox::question(this, tr("NoGo Result:"), str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
+        if (out.is_open()) {
+            for (int i = 1;i >= 0;i--) {
+                for (const auto& p : Logs[i]) {
+                    if (!p.second && (p.first == 'G' || p.first == 'T'))//认输记录为"G0"或"T0" 按要求只输出'G'或'T'
+                        out << p.first << ' ';
+                    else
+                        out << p.first << p.second << ' ';
+                }
+                out << std::endl;//代表一方记录输出结束
+            }
+            out << BOARD_GRAD_SIZE << endl;
+            out.close();
+
+            QMessageBox::information(this, tr("Done!"), tr("Your logs have been saved!"));
+        }
+
+        else {
+            QMessageBox::warning(this, tr("Warning"), tr("Can't create a file"));
+        }
+    });
+    connect(btn2,&QPushButton::clicked,this,[=](){
+        end->close();
+    });
+    QGridLayout *layout = new QGridLayout;
+    layout->addWidget(endInformation, 0, 0);
+    layout->addWidget(btn1,1,0);
+    layout->addWidget(btn2,1,1);
+    //layout->addWidget(connectButton, 3, 0, 1, 2);
+    end->setLayout(layout);
+    end->show();
+    }
+    if(game_type == View){
+        end = new QDialog(this);
+        QLabel *endInformation = new QLabel(str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
+                                               +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
+                                               +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s",end);
+        end->show();
+    }
+    if(game_type == Online){
+        end = new QDialog(this);
+        QLabel *endInformation = new QLabel(str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
+                                               +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
+                                               +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s"+"\n \n Whether to keep logs?",end);
+        QRadioButton* blackRadioYes = new QRadioButton(tr("Yes"));
+        QRadioButton* whiteRadioNo = new QRadioButton(tr("No"));
+        QButtonGroup* colorGroupYoN = new QButtonGroup(end);
+        colorGroupYoN->addButton(blackRadioYes);
+        colorGroupYoN->addButton(whiteRadioNo);
+
+        QLabel *askLabel = new QLabel(tr("Do you want to play again with your opponent?"));
+        QRadioButton* blackRadioYes1 = new QRadioButton(tr("Yes"));
+        QRadioButton* whiteRadioNo1 = new QRadioButton(tr("No"));
+        QButtonGroup* colorGroupYoN1 = new QButtonGroup(end);
+        colorGroupYoN1->addButton(blackRadioYes1);
+        colorGroupYoN1->addButton(whiteRadioNo1);
+
+        QRadioButton* blackRadio = new QRadioButton(tr("Hold Black"));
+        QRadioButton* whiteRadio = new QRadioButton(tr("Hold White"));
+        QButtonGroup* colorGroup = new QButtonGroup(end);
+        colorGroup->addButton(blackRadio);
+        colorGroup->addButton(whiteRadio);
+        QPushButton* btn1 = new QPushButton(end);
+        btn1->setText("Done");
+        connect(btn1,&QPushButton::clicked,this,[=]()
+        {
+            if(blackRadioYes->isChecked())
+            {
+                //用户选择保存记录
+                auto now_time = std::chrono::system_clock::now();//获取时间
+                auto timestamp = std::chrono::system_clock::to_time_t(now_time);//转换成本地时间
+                std::stringstream log_time;
+                log_time << std::put_time(std::localtime(&timestamp), "%Y-%m-%d_%H.%M.%S");//规范时间格式 不能有'/' ':'
+                QString filename = "Log_" + QString::fromStdString(log_time.str()) + ".txt";
+                QString filepath = dir.absoluteFilePath(filename);
+                std::ofstream out(filepath.toStdString());
+
+                if (out.is_open()) {
+                    for (int i = 1;i >= 0;i--) {
+                        for (const auto& p : Logs[i]) {
+                            if (!p.second && (p.first == 'G' || p.first == 'T'))//认输记录为"G0"或"T0" 按要求只输出'G'或'T'
+                                out << p.first << ' ';
+                            else
+                                out << p.first << p.second << ' ';
+                        }
+                        out << std::endl;//代表一方记录输出结束
+                    }
+                    out << BOARD_GRAD_SIZE << endl;
+                    out.close();
+
+                    QMessageBox::information(this, tr("Done!"), tr("Your logs have been saved!"));
+                }
+
+                else {
+                    QMessageBox::warning(this, tr("Warning"), tr("Can't create a file"));
+                }
+            }
+            /*设置好hold的颜色，并且发起连接！*/
+            if(blackRadioYes1->isChecked())
+            {
+                online_player_flag = blackRadio->isChecked();
+                if(!online_agreed)
+                {
+                    QString hold;
+                    if (online_player_flag)
+                        hold = "b";
+                    else
+                        hold = "w";
+                    NetworkData again(OPCODE::READY_OP,UserName,hold);
+                    socket->send(again);
+                }
+                if(online_agreed)
+                {
+                    QString hold;
+                    if (online_player_flag)
+                        hold = "b";
+                    else
+                        hold = "w";
+                NetworkData again(OPCODE::READY_OP,UserName,hold);
+                server->send(opponent,again);
+                }
+                delete end;
+                isWaiting = true;
+                }
+            else{
+                delete end;
+            }
+            });
+
+
+        QGridLayout *layout = new QGridLayout;
+        layout->addWidget(endInformation, 0, 0);
+        layout->addWidget(blackRadioYes,1,0);
+        layout->addWidget(whiteRadioNo,1,1);
+        layout->addWidget(askLabel,2,0);
+        layout->addWidget(blackRadioYes1,3,0);
+        layout->addWidget(whiteRadioNo1,3,1);
+        layout->addWidget(blackRadio,4,0);
+        layout->addWidget(whiteRadio,4,1);
+        layout->addWidget(btn1,5,0);
+        //layout->addWidget(connectButton, 3, 0, 1, 2);
+        end->setLayout(layout);
+        end->show();
+    }
+
+    /*int res = QMessageBox::question(this, tr("NoGo Result:"), str + " wins!"+" \n Total steps:"+QString::number(game->totalSteps,10)
                                                            +" \n Total time:"+QString::number(game->totalTime,10)+" s"+" \n Average time of black:"+QString::number(1.0*game->totalTime_black/game->totalSteps_black)
                                                            +" s"+" \n Average time of white:"+QString::number(1.0*game->totalTime_white/game->totalSteps_white)+" s"+"\n \n Whether to keep logs?", QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认不保存
-    if (res == QMessageBox::Yes && game_type != View) {
-    
+    */
+    /*if (res == QMessageBox::Yes && game_type != View) {
+
         //用户选择保存记录
 
         auto now_time = std::chrono::system_clock::now();//获取时间
@@ -868,13 +1037,14 @@ void MainWindow::ask_keeplogs(QString str)
     else {
         //不保存
     }
+    */
 
     for (int i = 0;i <= 1;i++) {
         if (!Logs[i].empty())
             Logs[i].clear();
     }
     //清空记录
-    if(game_type == Online)
+    /*if(game_type == Online)
     {
         ask = new QDialog(this);
         QLabel *askLabel = new QLabel(tr("Do you want to play again with your opponent?"));
@@ -891,7 +1061,7 @@ void MainWindow::ask_keeplogs(QString str)
         //connectButton = new QPushButton(tr("Connect"));
         connect(btn1,&QPushButton::clicked,this,[=]()
         {
-            /*设置好hold的颜色，并且发起连接！*/
+            //设置好hold的颜色，并且发起连接！
             online_player_flag = blackRadio->isChecked();
             if(!online_agreed)
             {
@@ -925,8 +1095,9 @@ void MainWindow::ask_keeplogs(QString str)
         layout->addWidget(btn2,2,1);
         //layout->addWidget(connectButton, 3, 0, 1, 2);
         ask->setLayout(layout);
-        ask->exec();
+        ask->show();
     }
+    */
 
 }
 
@@ -1036,12 +1207,14 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
                 online_player_flag = true;
             }
             //qDebug() <<"Maybe should not enter";
-            QString mess = data.data1 + " holding " + opp_hold + " wants to play with you";
+            QString mess = data.data1 + " holding " + opp_hold + " wants to play again with you";
             QByteArray ba = mess.toLatin1();
             char *ch;
             ch = ba.data();
             int res = QMessageBox::question(this, tr("Asking"), tr(ch), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认拒绝
             if (res == QMessageBox::Yes) {
+                if(end)
+                    end->close();
                 NetworkData ready(OPCODE::READY_OP,UserName,"");
                 socket->send(ready);
                 qDebug() << QDateTime::currentMSecsSinceEpoch() << "Client sends ready " + opp_ip << ready.data1 << '\n';
@@ -1050,6 +1223,8 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
                 timer->stop();
             }
             else {
+                if(end)
+                    end->close();
                 NetworkData reject(OPCODE::REJECT_OP,UserName,"");
                 socket->send(reject);
                 qDebug() << QDateTime::currentMSecsSinceEpoch() << "Clientr sends reject " + opp_ip << reject.data1 << '\n';
@@ -1123,7 +1298,16 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
         if (online_failure)//是己方输了 确认信息不用回复
             return;
         timer->stop();
-        QMessageBox::information (this, "You win!", "Your opponent has given up");
+        //QMessageBox::information (this, "You win!", "Your opponent has given up");
+        /*QMessageBox* tell = new QMessageBox(this);
+
+            // 设置消息框的标题、文本和按钮
+            tell->setWindowTitle("You win!");
+            tell->setText("Your opponent has given up");
+            tell->setStandardButtons(QMessageBox::Ok);
+
+            // 显示消息框为非模态
+            tell->open();*/
         game->totalSteps++;
         game->gameStatus = DEAD;
         timer->stop();//停止计时
@@ -1140,6 +1324,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
 
 
         ask_keeplogs(str);//询问是否保存对局记录
+
            // reGame();
 
     }
@@ -1195,12 +1380,14 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
                 online_player_flag = true;
             }
 
-            QString mess = data.data1 + " holding " + opp_hold + " wants to play with you";
+            QString mess = data.data1 + " holding " + opp_hold + " wants to play again with you";
             QByteArray ba = mess.toLatin1();
             char *ch;
             ch = ba.data();
             int res = QMessageBox::question(this, tr("Asking"), tr(ch), QMessageBox::Yes, QMessageBox::No);//默认拒绝
             if (res == QMessageBox::Yes) {
+                if(end)
+                    end->close();
                 game_type = Online;
 
                 online_agreed = true;
@@ -1215,6 +1402,8 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
                 online_WhetherHavePlayed = true;//标记对战过一次了，再来一局方便处理
             }
             else {
+                if(end)
+                    end->close();
                 NetworkData reject(OPCODE::REJECT_OP,UserName,"");
                 server->send(opponent,reject);
                 qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server sends reject " + opp_ip << reject.data1 << '\n';
@@ -1248,6 +1437,8 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
             ch = ba.data();
             int res = QMessageBox::question(this, tr("Asking"), tr(ch), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认拒绝
             if (res == QMessageBox::Yes) {
+                if(end)
+                    end->close();
                 game_type = Online;
 
                 online_agreed = true;
@@ -1260,6 +1451,8 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
                 timer->stop();
             }
             else {
+                if(end)
+                    end->close();
                 NetworkData reject(OPCODE::REJECT_OP,UserName,"");
                 server->send(opponent,reject);
                 qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server sends reject " + opp_ip << reject.data1 << '\n';
@@ -1326,7 +1519,16 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
         game->totalSteps++;
         game->gameStatus = DEAD;
         Logs[!online_player_flag].emplace_back(make_pair('G',0));
-        QMessageBox::information (this, "You win!", "Your opponent has given up");
+        //QMessageBox::information (this, "You win!", "Your opponent has given up");
+        /*QMessageBox* tell = new QMessageBox(this);
+
+            // 设置消息框的标题、文本和按钮
+            tell->setWindowTitle("You win!");
+            tell->setText("Your opponent has given up");
+            tell->setStandardButtons(QMessageBox::Ok);
+
+            // 显示消息框为非模态
+            tell->open();*/
         NetworkData giveup_end(OPCODE::GIVEUP_END_OP,UserName,"So you have given up");
         server->send(opponent,giveup_end);
         QString str;

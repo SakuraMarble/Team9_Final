@@ -76,7 +76,7 @@ private:
     bool online_WhetherHavePlayed = false;//是否对战过
     bool isWaiting = false;//是否是等待对方接受对局的状态
 
-    QDialog *ask = nullptr;
+    QDialog *end = nullptr;
     QString opp_ip="127.0.0.1";
     quint16 opp_port = 16667;
     QString IP;
