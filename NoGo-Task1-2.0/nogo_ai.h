@@ -7,6 +7,8 @@
 #ifndef nogoAI
 #define nogoAI 3373
 #include<bits/stdc++.h>
+#include<QObject>
+#include<QRunnable>
 using namespace std;
 //#ifndef empty
 typedef std::vector<int> vect;
