@@ -39,19 +39,19 @@ private:
     Ui::MainWindow *ui;
     //DialogChooseMode* dialog;
 
-    QTimer *timer=NULL;//计时器
-    QLabel *countlabel;//倒计时label
+    QTimer *timer = nullptr;//计时器
+    QLabel *countlabel = nullptr;//倒计时label
     //QVBoxLayout *layout;
     //QWidget *centralWidget;
-    QPushButton *agreeBut;
-    QPushButton *disagreeBut;
+    QPushButton *agreeBut = nullptr;
+    QPushButton *disagreeBut = nullptr;
     QString UserName;
 
     QString documentPath;
     QString subdirectory;
     QDir dir;
 
-    GameModel *game; // 游戏指针
+    GameModel *game = nullptr; // 游戏指针
     GameType game_type; // 存储游戏类型
 
     //ai *NoGoAI;
@@ -75,22 +75,22 @@ private:
     bool online_WhetherHavePlayed = false;//是否对战过
     bool isWaiting = false;//是否是等待对方接受对局的状态
 
-    QDialog *ask;
+    QDialog *ask = nullptr;
     QString opp_ip="127.0.0.1";
     quint16 opp_port = 16667;
     QString IP;
     quint16 PORT;
-    NetworkSocket *socket;
-    NetworkServer *server;
+    NetworkSocket *socket = nullptr;
+    NetworkServer *server = nullptr;
     queue<QTcpSocket *> Clients;//第二阶段没用到 用来处理多个客户端连接问题
     QTcpSocket *opponent;//第二阶段只处理一个客户端连接 用一个指针记录对手客户端套接字
 
-    DialogChooseMode *dialog;
-    Chat *dialog2;
+    DialogChooseMode *dialog = nullptr;
+    Chat *dialog2 = nullptr;
 
     vector<vector<info>> Logs;//记录对局的数组 0为白棋 1为黑棋
-    QPushButton *btn; //用来leave op的按钮；
-    NetworkData * publicNetworkdata; //所有类内函数均可访问的数据，用来实现不同函数之间的联系
+    QPushButton *btn = nullptr; //用来leave op的按钮；
+    NetworkData * publicNetworkdata = nullptr; //所有类内函数均可访问的数据，用来实现不同函数之间的联系
 
     // 绘制
     void paintEvent(QPaintEvent * event);
