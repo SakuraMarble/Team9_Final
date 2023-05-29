@@ -612,8 +612,11 @@ void MainWindow::on_pushButton_Surrender_clicked()
 void MainWindow::timer_init()
 {
     qDebug()<<"timer_init1";
-    if (timer)
+    if (timer) {
         delete timer;
+            timer = nullptr;
+    }
+
     qDebug()<<"timer_init1.1";
     timer = new QTimer;
     countlabel = ui->label;
