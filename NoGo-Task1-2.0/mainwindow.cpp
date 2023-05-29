@@ -546,10 +546,8 @@ void MainWindow::chessOneByPerson()
             ai newai;
             pii ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
             clickPosRow=ret.first; clickPosCol=ret.second;
-
             chessOneOnline();
-        }
-
+        } // 敌方下棋之后 AI托管模式下立即下棋
     }
     if (view_lose)
         reGame();
@@ -570,7 +568,46 @@ void MainWindow::chessOneOnline()
                 qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Server sends move" + opp_ip << move.data1 << '\n';
                 server->send(opponent,move);
             }
-            chessOneByPerson();
+
+            game->totalSteps++;
+            if(game->playerFlag == true)
+                game->totalSteps_black++;
+            if(game->playerFlag == false)
+                game->totalSteps_white++;
+            // 在游戏的数据模型中落子
+            if (game_type != View)
+                Logs[game->playerFlag].emplace_back(make_pair(clickPosRow - 1 + 'A',clickPosCol));
+            lastx=clickPosRow;
+            lasty=clickPosCol;
+            game->actionByPerson(clickPosRow, clickPosCol);//此处已换手
+            // 播放落子音效，待实现；
+
+            if (game->isLose(clickPosRow, clickPosCol) && game->gameStatus == PLAYING)
+            {
+                //qDebug() << "胜利"；
+                game->gameStatus = DEAD;
+                if (game_type == Online && online_player_flag == game->playerFlag) {//胜者发送
+                    NetworkData suicide(OPCODE::SUICIDE_END_OP,UserName,"You have suicided!");
+                    if (!online_agreed) //以此判断是服务端还是客户端
+                        socket->send(suicide);
+                    else
+                        server->send(opponent,suicide);
+                }
+
+                if (game_type == Online && online_player_flag != game->playerFlag)
+                    online_failure = true;//是己方输了
+                if (game_type != View)
+                    timer->stop();//停止计时
+                //QSound::play(":sound/win.wav");
+                QString str;
+                if (game->gameMapVec[clickPosRow][clickPosCol] == 1)
+                    str = "The white";//默认白色方是AI，玩家战败
+                else if (game->gameMapVec[clickPosRow][clickPosCol] == 0)
+                    str = "The black";
+                lose = true;//用于对局return
+                ask_keeplogs(str);//询问是否保存对局记录
+            }
+            timer_update();//重新倒计时
             repaint();
         }
     }
@@ -1365,7 +1402,15 @@ void MainWindow::on_pushButton_Chat_clicked(){
 };
 void MainWindow::on_pushButton_UseAI_clicked(){
 
-    if (game->gameType == Online && online_player_flag != game->playerFlag)//不是用户下棋的时机
-        return;
-    IfUsingAI[game->playerFlag]=!IfUsingAI[game->playerFlag];
+    //if (game->gameType == Online && online_player_flag != game->playerFlag)//不是用户下棋的时机
+        //return;
+    //IfUsingAI[game->playerFlag]=!IfUsingAI[game->playerFlag];
+    IfUsingAI[online_player_flag] = !IfUsingAI[online_player_flag];
+    qDebug() << online_player_flag << "switch\n";
+    if(IfUsingAI[online_player_flag] && online_player_flag == game->playerFlag){ //如果在己方轮次进入托管 立即由AI下棋
+            ai newai;
+            pii ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
+            clickPosRow=ret.first; clickPosCol=ret.second;
+            chessOneOnline();
+    }
 }
