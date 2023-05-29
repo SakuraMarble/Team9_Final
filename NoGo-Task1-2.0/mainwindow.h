@@ -39,7 +39,7 @@ private:
     Ui::MainWindow *ui;
     //DialogChooseMode* dialog;
 
-    QTimer *timer;//计时器
+    QTimer *timer=NULL;//计时器
     QLabel *countlabel;//倒计时label
     //QVBoxLayout *layout;
     //QWidget *centralWidget;
@@ -76,8 +76,8 @@ private:
     bool isWaiting = false;//是否是等待对方接受对局的状态
 
     QDialog *ask;
-    QString opp_ip;
-    quint16 opp_port = 0;
+    QString opp_ip="127.0.0.1";
+    quint16 opp_port = 16667;
     QString IP;
     quint16 PORT;
     NetworkSocket *socket;

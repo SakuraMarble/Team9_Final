@@ -295,6 +295,8 @@ void MainWindow::reGame()
 
 void MainWindow::initGameMode(GameType type)
 {
+    qDebug() << "initGameMode" << '\n';
+
     dialog->hide();
     online_failure = false;
     game->totalSteps=0;
@@ -313,7 +315,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
     // 通过鼠标的hover确定落子的标记
     int x = event->position().x();
     int y = event->position().y();
-
+    qDebug()<<"mousemoving";
     //棋盘n边缘不能落子
     if (x>=MARGIN + BLOCK_SIZE / 2 &&
             x < size().width() - MARGIN - BLOCK_SIZE / 2 &&
@@ -609,20 +611,27 @@ void MainWindow::on_pushButton_Surrender_clicked()
 
 void MainWindow::timer_init()
 {
+    qDebug()<<"timer_init1";
     if (timer)
         delete timer;
+    qDebug()<<"timer_init1.1";
     timer = new QTimer;
     countlabel = ui->label;
+
+    qDebug()<<"timer_init1.2";
     //countlabel->setGeometry(QRect(280,0,60,25));
     countlabel->setStyleSheet("font-family:\"Lucida Handwriting\";font-size:16px;");
     //countlabel->setAlignment(Qt::AlignHCenter);
     timer->setInterval(1000);//1s刷新一次
     TimerCountNumber = TimerLimit;
 
+    qDebug()<<"timer_init2";
     connect(timer,&QTimer::timeout,this,&MainWindow::TimerCount);//关联刷新倒计时
     //if (timer->isActive())
     countlabel->setText("Remaining time:"+QString::number(TimerCountNumber));
     timer->start();
+
+    qDebug()<<"timer_init3";
     game->gameStatus = PLAYING;
 }
 
@@ -725,6 +734,7 @@ void MainWindow::choosemode()
     //dialog = new DialogChooseMode;
     //dialog->show();
     dialog->exec();
+    qDebug() <<"choosemode";
     if (!online_agreed)
         game_type = dialog->game_typeForAll;
 
@@ -953,7 +963,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
     if(data.op == OPCODE::READY_OP && online_WhetherHavePlayed == false)
     {
         //initGameMode(game_type);
-        qDebug() << QDateTime::currentMSecsSinceEpoch() << "Client receives READY_OP from server" + opp_ip << '\n';
+        qDebug() << QDateTime::currentMSecsSinceEpoch() << "(first)Client receives READY_OP from server" + opp_ip << '\n';
         online_WhetherHavePlayed = true;
         initGameMode(Online);
         timer_init();
@@ -972,7 +982,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
                 opp_hold = "white";
                 online_player_flag = true;
             }
-
+            //qDebug() <<"Maybe should not enter";
             QString mess = data.data1 + " holding " + opp_hold + " wants to play with you";
             QByteArray ba = mess.toLatin1();
             char *ch;
@@ -1111,13 +1121,14 @@ pair<int,int> MainWindow::index_decode(QString index_data)//棋盘坐标解码
 
 void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
 {
+    qDebug() <<"receiving ";
     if (Clients.empty() || Clients.back() != client)
         Clients.push(client);//连接的客户端队列
     //if (client != socket->base())
     opponent = client;
     if(data.op == OPCODE::READY_OP && online_WhetherHavePlayed == false) //第一次发起对战时候的情况
     {
-        qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server receives READY_OP" + opp_ip << '\n';
+        qDebug() << QDateTime::currentMSecsSinceEpoch() << "(first game)Server receives READY_OP" + opp_ip << '\n';
         if (game->gameStatus != PLAYING) {
             QString opp_hold;
             //last = client;
@@ -1135,7 +1146,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
             QByteArray ba = mess.toLatin1();
             char *ch;
             ch = ba.data();
-            int res = QMessageBox::question(this, tr("Asking"), tr(ch), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认拒绝
+            int res = QMessageBox::question(this, tr("Asking"), tr(ch), QMessageBox::Yes, QMessageBox::No);//默认拒绝
             if (res == QMessageBox::Yes) {
                 game_type = Online;
 
@@ -1143,7 +1154,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
 
                 NetworkData ready(OPCODE::READY_OP,UserName,"");
                 server->send(opponent,ready);
-                qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server sends ready " + opp_ip << ready.data1 << '\n';
+                qDebug() << QDateTime::currentMSecsSinceEpoch() << "(first game)Server sends ready " + opp_ip << ready.data1 << '\n';
                 initGameMode(game_type);
                 timer_init();
                 timer->stop();
