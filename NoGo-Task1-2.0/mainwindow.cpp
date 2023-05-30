@@ -445,6 +445,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
 
 void MainWindow::chessOneByPerson()
 {
+    repaint();
     if (game_type == View) {
         if (Logs[game->playerFlag].empty()) {//认输编码'G'不会读入，等效无子
             QString str;
@@ -545,7 +546,9 @@ void MainWindow::chessOneByPerson()
         //update();
         if (game_type != View)
             timer_update();//重新倒计时
+        qDebug() << "AI"<<game->playerFlag;
         if(IfUsingAI[game->playerFlag]){
+            qDebug() << "entered";
             if (online_ai) {
                 //delete online_ai;
                 online_ai = nullptr;
@@ -1620,8 +1623,10 @@ void MainWindow::on_pushButton_UseAI_clicked(){
     //if (game->gameType == Online && online_player_flag != game->playerFlag)//不是用户下棋的时机
         //return;
     //IfUsingAI[game->playerFlag]=!IfUsingAI[game->playerFlag];
+    if(game->gameType == Online)
     IfUsingAI[online_player_flag] = !IfUsingAI[online_player_flag];
-
+    else IfUsingAI[game->playerFlag]=!IfUsingAI[game->playerFlag];;
+    if(game->gameType == Online){
     if (IfUsingAI[online_player_flag]) {
         online_ai = new Online_Ai_Helper;
         connect(online_ai, &Online_Ai_Helper::finished, this, &MainWindow::online_ai_finished);
@@ -1635,7 +1640,7 @@ void MainWindow::on_pushButton_UseAI_clicked(){
     } //退出托管模式
 
     //qDebug() << online_player_flag << "switch\n";
-    if(IfUsingAI[online_player_flag] && online_player_flag == game->playerFlag){ //如果在己方轮次进入托管 立即由AI下棋
+    if(IfUsingAI[game->playerFlag] && game->playerFlag == game->playerFlag){ //如果在己方轮次进入托管 立即由AI下棋
             //ai newai;
             online_ai->send_mes(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
             QThreadPool::globalInstance()->start(online_ai);
@@ -1643,6 +1648,30 @@ void MainWindow::on_pushButton_UseAI_clicked(){
             //clickPosRow=ret.first; clickPosCol=ret.second;
             //chessOneOnline();
     }
+    }
+    else {
+        if (IfUsingAI[game->playerFlag]) {
+            online_ai = new Online_Ai_Helper;
+            connect(online_ai, &Online_Ai_Helper::finished, this, &MainWindow::online_ai_finished);
+            // 创建线程池
+            //QThreadPool::globalInstance()->start(online_ai);
+        }
+        else {
+            /*QThreadPool::globalInstance()->waitForDone();
+            online_ai->deleteLater();
+            online_ai = nullptr;*/
+        } //退出托管模式
+
+        //qDebug() << online_player_flag << "switch\n";
+        if(IfUsingAI[game->playerFlag] && game->playerFlag == game->playerFlag){ //如果在己方轮次进入托管 立即由AI下棋
+                //ai newai;
+                online_ai->send_mes(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
+                QThreadPool::globalInstance()->start(online_ai);
+                //pii ret=newai.run(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
+                //clickPosRow=ret.first; clickPosCol=ret.second;
+                //chessOneOnline();
+        }
+        }
 }
 
 void MainWindow::online_ai_finished(pii result)
@@ -1650,5 +1679,7 @@ void MainWindow::online_ai_finished(pii result)
     clickPosRow = result.first;
     clickPosCol = result.second;
     qDebug() << "AI gave a result\n";
+    if(game->gameType == Online)
     chessOneOnline();
+    else chessOneByPerson();
 }
