@@ -401,8 +401,14 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
         selectPos = false;
     }
 
-    if (game->gameType == Online)
-        qDebug() << "Online playing" << '\n';
+    if (game->gameType == Online) {
+        /*qDebug() << "Online playing" << '\n';
+        if (game->gameStatus == PLAYING)
+            qDebug() << "Game Status Playing\n";
+        else if (game->gameStatus == DEAD)
+            qDebug() << "Game Status Dead\n";*/
+    }
+
 
     if (game->gameType == Online && online_player_flag == game->playerFlag) {
         chessOneOnline();
@@ -475,7 +481,7 @@ void MainWindow::chessOneByPerson()
 
     // 根据当前存储的坐标下子
     // 只有有效点击才行，并且该处没有子
-    if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1 && !view_lose && game->gameStatus!=DEAD)
+    if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1 && !view_lose && game->gameStatus == PLAYING)
     {
         game->totalSteps++;
         if(game->playerFlag == true)
@@ -500,10 +506,16 @@ void MainWindow::chessOneByPerson()
             game->gameStatus = DEAD;
             if (game_type == Online && online_player_flag == game->playerFlag) {//胜者发送
                 NetworkData suicide(OPCODE::SUICIDE_END_OP,UserName,"You have suicided!");
-                if (!online_agreed) //以此判断是服务端还是客户端
+                if (!online_agreed) {
                     socket->send(suicide);
-                else
+                    qDebug() << "Client sends SUICIDE_END_OP\n";
+                }//以此判断是服务端还是客户端
+
+                else {
                     server->send(opponent,suicide);
+                    qDebug() << "Server sends SUICIDE_END_OP\n";
+                }
+
             }
             //qDebug() << "win2";
             if (game_type == Online && online_player_flag != game->playerFlag)
@@ -527,7 +539,7 @@ void MainWindow::chessOneByPerson()
 
         }
         //update();
-        if (game_type != View)
+        if (game_type != View && game->gameStatus != DEAD)
             timer_update();//重新倒计时
         //qDebug() << "AI"<<game->playerFlag;
         if(IfUsingAI[game->playerFlag]){
@@ -550,16 +562,16 @@ void MainWindow::chessOneByPerson()
 void MainWindow::chessOneOnline()
 {
     if (online_player_flag == game->playerFlag) { //轮到己方下棋 online_player_flag是自己这边在网络对战中的执子类型
-        if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1 && !view_lose && game->gameStatus!=DEAD)
+        if (clickPosRow != -1 && clickPosCol != -1 && game->gameMapVec[clickPosRow][clickPosCol] == -1 && !view_lose && game->gameStatus == PLAYING)
         {
             QString time = QString::number(QDateTime::currentMSecsSinceEpoch());
             NetworkData move = NetworkData(OPCODE::MOVE_OP,index_encode(clickPosRow,clickPosCol),time);
             if (!online_agreed) {
-                qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Client sends move" + opp_ip << move.data1 << '\n';
+                qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Client sends move " + opp_ip << move.data1 << '\n';
                 socket->send(move);
             }
             else {
-                qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Server sends move" + opp_ip << move.data1 << '\n';
+                qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Server sends move " + opp_ip << move.data1 << '\n';
                 server->send(opponent,move);
             }
 
@@ -601,7 +613,8 @@ void MainWindow::chessOneOnline()
                 lose = true;//用于对局return
                 ask_keeplogs(str);//询问是否保存对局记录
             }
-            timer_update();//重新倒计时
+            if (game->gameStatus != DEAD)
+                timer_update();//重新倒计时
             repaint();
         }
     }
@@ -661,7 +674,7 @@ void MainWindow::timer_init()
     countlabel->setText("Remaining time:"+QString::number(TimerCountNumber));
     timer->start();
 
-    //qDebug()<<"timer_init3";
+    //qDebug()<<"timer_init and now begin playing";
     game->gameStatus = PLAYING;
 }
 
@@ -1036,10 +1049,10 @@ void MainWindow::ask_keeplogs(QString str)
     }
     */
 
-    for (int i = 0;i <= 1;i++) {
+    //for (int i = 0;i <= 1;i++) {
         //if (!Logs[i].empty())
             //Logs[i].clear();
-    }
+    //}
     //清空记录
     /*if(game_type == Online)
     {
@@ -1252,8 +1265,18 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
     if (data.op == OPCODE::TIMEOUT_END_OP || data.op == OPCODE::SUICIDE_END_OP || data.op == OPCODE::GIVEUP_END_OP) {
         timer_init();
         timer->stop();
+        game->gameStatus = DEAD; // 就是这个buggy 浪费了我1h+的时间
+        QString op_str;
+        if (data.op == OPCODE::TIMEOUT_END_OP)
+            op_str = "TIMEOUT_END_OP";
+        else if (data.op == OPCODE::SUICIDE_END_OP)
+            op_str = "SUICIDE_END_OP";
+        else
+            op_str = "GIVEUP_END_OP";
+        qDebug() << "Client receives " + op_str + "\n";
         if (online_failure) {
             NetworkData GG(data.op,UserName,"All right, I failed");
+            qDebug() << "Client confirms END_OP\n";
             socket->send(GG);//败方回复确认
         }
         //int ret = QMessageBox::question(this,tr("Asking"),tr("Do you want to play again with your opponent?"),QMessageBox::Yes | QMessageBox::No,QMessageBox::No);
@@ -1278,6 +1301,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
     if(data.op == OPCODE::LEAVE_OP)
     {
         timer->stop();
+        qDebug() << "Client receives LEAVE_OP\n";
         QDialog * left = new QDialog(this);
         left->setWindowTitle("Your opponent has left");
         QLabel * reason = new QLabel(left);
@@ -1292,8 +1316,9 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
     }
 
     if (data.op == OPCODE::GIVEUP_OP) { //收到对方认输
-        if (online_failure)//是己方输了 确认信息不用回复
-            return;
+        //if (online_failure)//是己方输了 确认信息不用回复
+            //return;
+        qDebug() << "Client receives GIVEUP_OP\n";
         timer->stop();
         //QMessageBox::information (this, "You win!", "Your opponent has given up");
         /*QMessageBox* tell = new QMessageBox(this);
@@ -1330,6 +1355,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
         qDebug() << QDateTime::currentMSecsSinceEpoch() << "Client receives CHAT_OP from server" + opp_ip << '\n';
     }
     if(data.op == OPCODE::REJECT_OP) {
+        qDebug() << "Client receives REJECT_OP\n";
         reGame();
         QMessageBox::information(this,"Sorry","You're rejected by your opponent");
 
@@ -1356,7 +1382,7 @@ pair<int,int> MainWindow::index_decode(QString index_data)//棋盘坐标解码
 
 void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
 {
-    qDebug() <<"receiving ";
+    //qDebug() <<"receiving ";
     if (Clients.empty() || Clients.back() != client)
         Clients.push(client);//连接的客户端队列
     //if (client != socket->base())
@@ -1472,8 +1498,17 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
         timer_init();
         timer->stop();
         game->gameStatus = DEAD;
+        QString op_str;
+        if (data.op == OPCODE::TIMEOUT_END_OP)
+            op_str = "TIMEOUT_END_OP";
+        else if (data.op == OPCODE::SUICIDE_END_OP)
+            op_str = "SUICIDE_END_OP";
+        else
+            op_str = "GIVEUP_END_OP";
+        qDebug() << "Server receives " + op_str + "\n";
         if (online_failure) {
             NetworkData GG(data.op,UserName,"All right, I failed");
+            qDebug() << "Server confirms END_OP\n";
             server->send(opponent,GG);//败方回复确认
         }
         //server->leave(opponent);//离开或胜负已分 断开连接 清空ip与端口信息
@@ -1483,6 +1518,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
     if( data.op == OPCODE::LEAVE_OP)
     {
         timer->stop();
+        qDebug() << "Server receives LEAVE_OP\n";
         QDialog * left = new QDialog(this);
         left->setWindowTitle("Your opponent has left");
         QLabel * reason = new QLabel(left);
@@ -1499,12 +1535,14 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
     }
     if( data.op == OPCODE::CHAT_OP)
     {
+        qDebug() << "Server receives CHAT_OP\n";
         QMessageBox::information(this,"Said to you",data.data1);
     }
     if (data.op == OPCODE::GIVEUP_OP) { //收到对方认输
         timer->stop();
         timer_init();
         timer->stop();//停止计时
+        qDebug() << "Server receives GIVEUP_OP\n";
         game->totalSteps++;
         game->gameStatus = DEAD;
         Logs[!online_player_flag].emplace_back(make_pair('G',0));
@@ -1519,6 +1557,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
             // 显示消息框为非模态
             tell->open();*/
         NetworkData giveup_end(OPCODE::GIVEUP_END_OP,UserName,"So you have given up");
+        qDebug() << "Server sends GIVEUP_END_OP\n";
         server->send(opponent,giveup_end);
         QString str;
         if (game->playerFlag)
