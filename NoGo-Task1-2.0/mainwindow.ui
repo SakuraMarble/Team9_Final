@@ -90,6 +90,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="OtherAI">
+       <property name="text">
+        <string>Switch_other(local)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="Chat">
        <property name="text">
         <string>Chat(Valid in Online PvP)</string>

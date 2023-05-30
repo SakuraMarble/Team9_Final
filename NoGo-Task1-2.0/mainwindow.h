@@ -116,6 +116,7 @@ private:
     void choose_logs();//View复现模式下选择本地存档
     void on_pushButton_UseAI_clicked();//托管
     void on_pushButton_Chat_clicked();
+    void on_pushButton_OtherAI_clicked();//对方
     void choosemode();//开局或重开选择模式&设置时间限制
 private slots:
     void on_pushButton_Surrender_clicked();//认输

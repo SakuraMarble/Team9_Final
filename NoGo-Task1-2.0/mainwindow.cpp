@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent,QString username)
 
     connect(ui->Chat,&QPushButton::clicked,this,&MainWindow::on_pushButton_Chat_clicked);
     connect(ui->UseAI,&QPushButton::clicked,this,&MainWindow::on_pushButton_UseAI_clicked);
+    connect(ui->OtherAI,&QPushButton::clicked,this,&MainWindow::on_pushButton_OtherAI_clicked);
     //setMouseTracking(true);
     // 设置窗口大小
     setFixedSize(
@@ -1684,3 +1685,7 @@ void MainWindow::online_ai_finished(pii result)
     chessOneOnline();
     else chessOneByPerson();
 }
+void MainWindow::on_pushButton_OtherAI_clicked(){
+    if(game->gameType == Online)return;
+    IfUsingAI[!game->playerFlag]=!IfUsingAI[!game->playerFlag];
+};
