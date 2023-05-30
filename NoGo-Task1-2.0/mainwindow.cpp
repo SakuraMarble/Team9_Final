@@ -439,7 +439,7 @@ void MainWindow::chessOneByPerson()
     repaint();
 
     if (game_type == View) {
-        if (Logs[game->playerFlag].empty()) {//认输编码'G'不会读入，等效无子
+        if (Logs[game->playerFlag].empty()) {
             QString str;
             if (game->playerFlag)
                 str = "The white"; //黑色无子白色赢！
@@ -460,11 +460,11 @@ void MainWindow::chessOneByPerson()
                 Logs[game->playerFlag].clear();
             else
                 Logs[game->playerFlag].erase(Logs[game->playerFlag].begin());
-            /*if (now_move.first == 'G' && !now_move.second) {
+            if (now_move.first == 'G' && !now_move.second) {
                 on_pushButton_Surrender_clicked();
                 view_lose = true;
                 //return;//认输一步
-            }*/
+            }
             //else {
             clickPosRow = now_move.first - 'A' + 1;
             clickPosCol = now_move.second;
@@ -483,8 +483,11 @@ void MainWindow::chessOneByPerson()
         if(game->playerFlag == false)
             game->totalSteps_white++;
         // 在游戏的数据模型中落子
-        if (game_type != View)
+        if (game_type != View) {
             Logs[game->playerFlag].emplace_back(make_pair(clickPosRow - 1 + 'A',clickPosCol));
+            //qDebug() << Logs[game->playerFlag].back().first << " " << Logs[game->playerFlag].back().second << '\n';
+        }
+
         lastx=clickPosRow;
         lasty=clickPosCol;
         game->actionByPerson(clickPosRow, clickPosCol);//此处已换手
@@ -825,6 +828,12 @@ void MainWindow::ask_keeplogs(QString str)
         std::ofstream out(filepath.toStdString());
 
         if (out.is_open()) {
+            /*for (int i = 1;i >= 0;i--) {
+                for (auto p : Logs[i]) {
+                    qDebug() << p.first << p.second << ' ';
+                }
+                qDebug() << '\n';
+            }*/
             for (int i = 1;i >= 0;i--) {
                 for (const auto& p : Logs[i]) {
                     if (!p.second && (p.first == 'G' || p.first == 'T'))//认输记录为"G0"或"T0" 按要求只输出'G'或'T'
@@ -834,8 +843,13 @@ void MainWindow::ask_keeplogs(QString str)
                 }
                 out << std::endl;//代表一方记录输出结束
             }
-            out << BOARD_GRAD_SIZE << endl;
+            //out << BOARD_GRAD_SIZE << endl;
             out.close();
+            for (int i = 0;i <= 1;i++) {
+                if (!Logs[i].empty())
+                    Logs[i].clear();
+            }
+            //清空记录
 
             int ret = QMessageBox::information(this, tr("Done!"), tr("Your logs have been saved!"));
             if(ret == QMessageBox::Ok)
@@ -917,8 +931,13 @@ void MainWindow::ask_keeplogs(QString str)
                         }
                         out << std::endl;//代表一方记录输出结束
                     }
-                    out << BOARD_GRAD_SIZE << endl;
+                    //out << BOARD_GRAD_SIZE << endl;
                     out.close();
+                    for (int i = 0;i <= 1;i++) {
+                        if (!Logs[i].empty())
+                            Logs[i].clear();
+                    }
+                    //清空记录
 
                     QMessageBox::information(this, tr("Done!"), tr("Your logs have been saved!"));
                 }
@@ -1018,8 +1037,8 @@ void MainWindow::ask_keeplogs(QString str)
     */
 
     for (int i = 0;i <= 1;i++) {
-        if (!Logs[i].empty())
-            Logs[i].clear();
+        //if (!Logs[i].empty())
+            //Logs[i].clear();
     }
     //清空记录
     /*if(game_type == Online)
@@ -1117,7 +1136,7 @@ void MainWindow::choose_logs()
                 std::getline(in,line);
                 std::stringstream tmp(line);
                 tmp >> BOARD_GRAD_SIZE;
-                game->BOARD_GRAD_SIZE = BOARD_GRAD_SIZE;//第三行为棋盘路数
+                game->BOARD_GRAD_SIZE = 10;//BOARD_GRAD_SIZE;//第三行为棋盘路数
                 in.close();
                 std::cout << "Read log file successfully." << std::endl;
                 std::cout << "Black player's moves:" << std::endl;
