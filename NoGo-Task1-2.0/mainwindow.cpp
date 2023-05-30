@@ -273,7 +273,7 @@ void MainWindow::reGame()
         initGameMode(game_type);
 
     if (online_request) {
-        qDebug() << opp_ip << opp_port;
+        //qDebug() << opp_ip << opp_port;
 
         disconnect(this->server,&NetworkServer::receive,this,&MainWindow::receiveData);
         //Clients.pop();
@@ -299,7 +299,7 @@ void MainWindow::reGame()
 
 void MainWindow::initGameMode(GameType type)
 {
-    qDebug() << "initGameMode" << '\n';
+    //qDebug() << "initGameMode" << '\n';
 
     dialog->hide();
     online_failure = false;
@@ -529,7 +529,7 @@ void MainWindow::chessOneByPerson()
         //update();
         if (game_type != View)
             timer_update();//重新倒计时
-        qDebug() << "AI"<<game->playerFlag;
+        //qDebug() << "AI"<<game->playerFlag;
         if(IfUsingAI[game->playerFlag]){
             //qDebug() << "entered";
             if (online_ai)
@@ -638,30 +638,30 @@ void MainWindow::on_pushButton_Surrender_clicked()
 
 void MainWindow::timer_init()
 {
-    qDebug()<<"timer_init1";
+    //qDebug()<<"timer_init1";
     if (timer) {
         delete timer;
         timer = nullptr;
     }
 
-    qDebug()<<"timer_init1.1";
+    //qDebug()<<"timer_init1.1";
     timer = new QTimer;
     countlabel = ui->label;
 
-    qDebug()<<"timer_init1.2";
+    //qDebug()<<"timer_init1.2";
     //countlabel->setGeometry(QRect(280,0,60,25));
     countlabel->setStyleSheet("font-family:\"Lucida Handwriting\";font-size:16px;color:black");
     //countlabel->setAlignment(Qt::AlignHCenter);
     timer->setInterval(1000);//1s刷新一次
     TimerCountNumber = TimerLimit;
 
-    qDebug()<<"timer_init2";
+    //qDebug()<<"timer_init2";
     connect(timer,&QTimer::timeout,this,&MainWindow::TimerCount);//关联刷新倒计时
     //if (timer->isActive())
     countlabel->setText("Remaining time:"+QString::number(TimerCountNumber));
     timer->start();
 
-    qDebug()<<"timer_init3";
+    //qDebug()<<"timer_init3";
     game->gameStatus = PLAYING;
 }
 
@@ -764,7 +764,7 @@ void MainWindow::choosemode()
     //dialog = new DialogChooseMode;
     //dialog->show();
     dialog->exec();
-    qDebug() <<"choosemode";
+    //qDebug() <<"choosemode";
     if (!online_agreed)
         game_type = dialog->game_typeForAll;
 
@@ -1116,7 +1116,7 @@ void MainWindow::choose_logs()
             return;
         }
         //QString selectedFilePath = QFileDialog::getOpenFileName(this, "Select Log File", dir.absolutePath(), "*.txt");
-        qDebug() << selectedFilePath;
+        //qDebug() << selectedFilePath;
         if (!selectedFilePath.isEmpty()) {
             std::ifstream in(selectedFilePath.toStdString());
             if (!in) {
@@ -1224,7 +1224,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
                     end->close();
                 NetworkData reject(OPCODE::REJECT_OP,UserName,"");
                 socket->send(reject);
-                qDebug() << QDateTime::currentMSecsSinceEpoch() << "Clientr sends reject " + opp_ip << reject.data1 << '\n';
+                qDebug() << QDateTime::currentMSecsSinceEpoch() << "Client sends reject " + opp_ip << reject.data1 << '\n';
             }
 
     }
