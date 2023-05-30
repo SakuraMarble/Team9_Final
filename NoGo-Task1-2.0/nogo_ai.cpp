@@ -73,14 +73,20 @@ pii ai::thinking(brd &board,int use,int size){
             for(int j=1;j<size;j++){
                 if(board[i][j]!=ai_empty)worth[i][j]=-1e7;
                 else{
-                    if(i<=2||i>=size-2)worth[i][j]+=rand()%10;
-                    if(j<=2||j>=size-2)worth[i][j]+=rand()%10;
+                    if(i<=2||i>=size-2)worth[i][j]+=1;
+                    if(j<=2||j>=size-2)worth[i][j]+=1;
                     bool zs=(i>=0&&j-1>=0&&board[i][j-1]==use);
                     bool ys=(i>=0&&j+1<size&&board[i][j+1]==use);
                     bool zx=(i+1<size&&j>=0&&board[i+1][j]==use);
                     bool yx=(i-1>=0&&j<size&&board[i-1][j]==use);
                     int summ=(int)zs+(int)ys+(int)zx+(int)yx;
-                    worth[i][j]-=summ*20;
+                    worth[i][j]-=summ*1;
+                    zs=(i>=0&&j-1>=0&&board[i][j-1]==enemy);
+                    ys=(i>=0&&j+1<size&&board[i][j+1]==enemy);
+                    zx=(i+1<size&&j>=0&&board[i+1][j]==enemy);
+                    yx=(i-1>=0&&j<size&&board[i-1][j]==enemy);
+                    summ=(int)zs+(int)ys+(int)zx+(int)yx;
+                    worth[i][j]+=summ*1;
                     board[i][j]=use;
                     if(ai_check(board,size)){
                         worth[i][j]+=ai_calc(board,use,size);
