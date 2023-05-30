@@ -385,16 +385,6 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
         }
 
         // 判断输赢,请移步mouseReleaseEvent
-        /*
-        if (clickPosRow > 0 && clickPosRow < BOARD_GRAD_SIZE &&
-            clickPosCol > 0 && clickPosCol < BOARD_GRAD_SIZE &&
-            (game->gameMapVec[clickPosRow][clickPosCol] == 1 ||
-             game->gameMapVec[clickPosRow][clickPosCol] == 0))
-        {
-
-        }*/
-
-
     }
 
     // 存了坐标之后也要重新绘制
@@ -527,19 +517,6 @@ void MainWindow::chessOneByPerson()
 
 
             ask_keeplogs(str);//询问是否保存对局记录
-            /*if(game_type == Online&&!online_agreed)
-            {
-                QString hold;
-                if (online_player_flag)
-                hold = "b";
-                else
-                hold = "w";
-                NetworkData again(OPCODE::READY_OP,UserName,hold);
-                socket->send(again);
-                initGameMode(Online);
-                timer_init();
-                timer->stop();
-            }*/
             if(game_type!=Online)
             reGame();
 
@@ -550,21 +527,16 @@ void MainWindow::chessOneByPerson()
             timer_update();//重新倒计时
         qDebug() << "AI"<<game->playerFlag;
         if(IfUsingAI[game->playerFlag]){
-            qDebug() << "entered";
-            if (online_ai) {
-                //delete online_ai;
+            //qDebug() << "entered";
+            if (online_ai)
                 online_ai = nullptr;
-            }
+
             online_ai = new Online_Ai_Helper;
             connect(online_ai, &Online_Ai_Helper::finished, this, &MainWindow::online_ai_finished);
-            qDebug() << "new runnable\n";
+            //qDebug() << "new runnable\n";
             online_ai->send_mes(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
             QThreadPool::globalInstance()->start(online_ai);
-            qDebug() << "new start\n";
-            /*ai newai;
-            pii ret=newai.thinking(game->gameMapVec,game->playerFlag,BOARD_GRAD_SIZE);//向AI传入对局信息并获得AI下棋位置
-            clickPosRow=ret.first; clickPosCol=ret.second;
-            chessOneOnline();*/
+            //qDebug() << "new start\n";
         } // 敌方下棋之后 AI托管模式下立即下棋
     }
     if (view_lose)
@@ -1424,44 +1396,44 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
     }
     else if (data.op == OPCODE::READY_OP && isWaiting == false && online_WhetherHavePlayed == true) {
         qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server receives READY_OP" + opp_ip << '\n';
-            QString opp_hold;
-            //last = client;
-            if (data.data2 == "b") {
-                opp_hold = "black";
-                online_player_flag = false;
-            }
+        QString opp_hold;
+        //last = client;
+        if (data.data2 == "b") {
+            opp_hold = "black";
+            online_player_flag = false;
+        }
 
-            else if (data.data2 == "w") {
-                opp_hold = "white";
-                online_player_flag = true;
-            }
+        else if (data.data2 == "w") {
+            opp_hold = "white";
+            online_player_flag = true;
+        }
 
-            QString mess = data.data1 + " holding " + opp_hold + " wants to play with you again!";
-            QByteArray ba = mess.toLatin1();
-            char *ch;
-            ch = ba.data();
-            int res = QMessageBox::question(this, tr("Asking"), tr(ch), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认拒绝
-            if (res == QMessageBox::Yes) {
-                if(end)
-                    end->close();
-                game_type = Online;
+        QString mess = data.data1 + " holding " + opp_hold + " wants to play with you again!";
+        QByteArray ba = mess.toLatin1();
+        char *ch;
+        ch = ba.data();
+        int res = QMessageBox::question(this, tr("Asking"), tr(ch), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);//默认拒绝
+        if (res == QMessageBox::Yes) {
+            if(end)
+                end->close();
+            game_type = Online;
 
-                online_agreed = true;
+            online_agreed = true;
 
-                NetworkData ready(OPCODE::READY_OP,UserName,"");
-                server->send(opponent,ready);
-                qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server sends ready again " + opp_ip<<"This is playing again" << ready.data1 << '\n';
-                initGameMode(game_type);
-                timer_init();
-                timer->stop();
-            }
-            else {
-                if(end)
-                    end->close();
-                NetworkData reject(OPCODE::REJECT_OP,UserName,"");
-                server->send(opponent,reject);
-                qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server sends reject " + opp_ip << reject.data1 << '\n';
-            }
+            NetworkData ready(OPCODE::READY_OP,UserName,"");
+            server->send(opponent,ready);
+            qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server sends ready again " + opp_ip<<"This is playing again" << ready.data1 << '\n';
+            initGameMode(game_type);
+            timer_init();
+            timer->stop();
+        }
+        else {
+            if(end)
+                end->close();
+            NetworkData reject(OPCODE::REJECT_OP,UserName,"");
+            server->send(opponent,reject);
+            qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server sends reject " + opp_ip << reject.data1 << '\n';
+        }
 
     }
     if (data.op == OPCODE::MOVE_OP) {
@@ -1486,14 +1458,6 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
         }
         //server->leave(opponent);//离开或胜负已分 断开连接 清空ip与端口信息
         Clients.pop();
-        /*if(game_type == Online&&!online_agreed)
-        {
-            NetworkData agagin(OPCODE::READY_OP,UserName,"b");
-            socket->send(agagin);
-            initGameMode(Online);
-            timer_init();
-            timer->stop();
-        }*/
         //reGame();
     }
     if( data.op == OPCODE::LEAVE_OP)
@@ -1543,20 +1507,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
         else
             str = "The black"; //白色认输黑色win！
 
-
-
         ask_keeplogs(str);//询问是否保存对局记录
-            //initGameMode(Online);
-            /*if(game_type == Online&&!online_agreed)
-            {
-                NetworkData again(OPCODE::READY_OP,UserName,"b");
-                socket->send(again);
-                initGameMode(Online);
-                timer_init();
-                timer->stop();
-            }*/
-            //reGame();
-
     }
 }
 
@@ -1682,7 +1633,7 @@ void MainWindow::online_ai_finished(pii result)
     clickPosCol = result.second;
     qDebug() << "AI gave a result\n";
     if(game->gameType == Online)
-    chessOneOnline();
+        chessOneOnline();
     else chessOneByPerson();
 }
 void MainWindow::on_pushButton_OtherAI_clicked(){
