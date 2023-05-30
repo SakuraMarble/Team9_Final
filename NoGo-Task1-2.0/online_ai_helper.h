@@ -6,32 +6,13 @@
 */
 #ifndef OnlineAI
 #define OnlineAI 3373
-#include<bits/stdc++.h>
+#include<nogo_ai.h>
 #include<QObject>
 #include<QRunnable>
 using namespace std;
-//#ifndef empty
-typedef std::vector<int> vect;
-typedef vector< vect > brd;
-#define ai_empty -1
-#define ai_black 1
-#define ai_white 0
-//#define board gameMapVec
-//#define size BOARD_GRAD_SIZE
-#define pii pair<int,int>
-class Online_Ai_Helper : public QObject,public QRunnable{
+class Online_Ai_Helper : public QObject,public QRunnable,public ai{
     Q_OBJECT
-    int ai_fa[10000];//并查集
-    int air[10000];
-    int findai_fa(int i);
-    void ai_merge(int sour,int dest);
-    int ai_calc(brd &board,int use,int size);
 public:
-    bool ai_check(brd &board,int size);
-    pii thinking(brd &board,int use,int size);
-    int get_possi(brd&board,int use,int size);
-    bool ai_try(brd &board,int x,int y,int col,int size);
-
     explicit Online_Ai_Helper() {};
     ~Online_Ai_Helper();
     void run();

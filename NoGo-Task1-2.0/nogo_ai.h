@@ -18,6 +18,7 @@ typedef vector< vect > brd;
 //#define size BOARD_GRAD_SIZE
 #define pii pair<int,int>
 class ai{
+protected:
     int ai_fa[10000];//并查集
     int air[10000];
     int findai_fa(int i);

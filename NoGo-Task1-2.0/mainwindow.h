@@ -15,7 +15,6 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QFileDialog>
-#include <nogo_ai.h>
 #include <online_ai_helper.h>
 #include <dialogchoosemode.h>
 
