@@ -1,5 +1,6 @@
 #include"nogo_ai.h"
 #include<qdebug.h>
+#include<iostream>
 int ai::findai_fa(int i){
         //并查集
         if(i==ai_fa[i])return i;
@@ -37,7 +38,7 @@ bool ai::ai_check(brd &board,int size){
                 }
         return true;
     }
-int ai::ai_calc(brd &board,int use,int size){
+int ai::ai_calc(int xxx,int yyy,brd &board,int use,int size){
     //玩家use已落子，判断这个子对他的作用
         int val=0;
         int enemy=1-use;
@@ -54,7 +55,9 @@ int ai::ai_calc(brd &board,int use,int size){
                     board[i][j]=enemy;
                     if(ai_check(board,size)){
                         val-=100;
+
                     }
+                    else disbld[xxx][yyy].push_back(i*size+j);
                     board[i][j]=ai_empty;
                 }
             }
@@ -89,7 +92,7 @@ pii ai::thinking(brd &board,int use,int size){
                     worth[i][j]+=summ*1;
                     board[i][j]=use;
                     if(ai_check(board,size)){
-                        worth[i][j]+=ai_calc(board,use,size);
+                        worth[i][j]+=ai_calc(i,j,board,use,size);
                     }
                     else worth[i][j]=-1e6;
                     board[i][j]=ai_empty;
@@ -97,26 +100,41 @@ pii ai::thinking(brd &board,int use,int size){
 
                     board[i][j]=enemy;
                     if(ai_check(board,size)){
-                        worth[i][j]+=ai_calc(board,enemy,size);
+                        worth[i][j]+=ai_calc(i,j,board,enemy,size);
                     }
                     board[i][j]=ai_empty;
 
 
                 }
             }
+        int real_worth[size][size];
+        for(int i=1;i<size;i++)
+            for(int j=1;j<size;j++){
+                real_worth[i][j]=worth[i][j];
+                for(int t=0;t<disbld[i][j].size();t++)
+                    real_worth[i][j]+=max(worth[disbld[i][j][t]/size][disbld[i][j][t]%size]/100*100,0);
+            }
         int mn=-1e8;
         int x=1,y=1;
         for(int i=1;i<size;i++)
             for(int j=1;j<size;j++)
-                if(worth[i][j]>mn){
-                    mn=worth[i][j];
+                if(real_worth[i][j]>mn){
+                    mn=real_worth[i][j];
                     x=i;
                     y=j;
                 }
+        QDebug deb = qDebug();
+        for(int i=1;i<size;i++){
+            for(int j=1;j<size;j++)
+                deb<<real_worth[i][j]<<" ";deb<<'\n';}deb<<'\n';
+            for(int i=1;i<size;i++){
+                for(int j=1;j<size;j++)
+                    deb<<worth[i][j]<<" ";deb<<'\n';
+        }
         return make_pair(x,y);
     }
 int ai::get_possi(brd &board,int use,int size){//判断优势
-    return ai_calc(board,use,size)/100;
+    return ai_calc(1,1,board,use,size)/100;
 }
 bool ai::ai_try(brd &board,int x,int y,int col,int size){//判断是否可行
     if(board[x][y]!=ai_empty)return false;
