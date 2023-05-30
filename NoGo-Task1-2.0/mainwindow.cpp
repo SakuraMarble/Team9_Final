@@ -492,7 +492,8 @@ void MainWindow::chessOneByPerson()
 
         if (game->isLose(clickPosRow, clickPosCol) && game->gameStatus == PLAYING)
         {
-            //qDebug() << "胜利"；
+
+            //qDebug() << "win1";
             game->gameStatus = DEAD;
             if (game_type == Online && online_player_flag == game->playerFlag) {//胜者发送
                 NetworkData suicide(OPCODE::SUICIDE_END_OP,UserName,"You have suicided!");
@@ -501,24 +502,24 @@ void MainWindow::chessOneByPerson()
                 else
                     server->send(opponent,suicide);
             }
-
+            //qDebug() << "win2";
             if (game_type == Online && online_player_flag != game->playerFlag)
                 online_failure = true;//是己方输了
             if (game_type != View)
                 timer->stop();//停止计时
             //QSound::play(":sound/win.wav");
             QString str;
+            //qDebug() << "win3";
             if (game->gameMapVec[clickPosRow][clickPosCol] == 1)
                 str = "The white";//默认白色方是AI，玩家战败
             else if (game->gameMapVec[clickPosRow][clickPosCol] == 0)
                 str = "The black";
             lose = true;//用于对局return
-
+            //qDebug() << "win4";
 
 
             ask_keeplogs(str);//询问是否保存对局记录
-            if(game_type!=Online)
-            reGame();
+
 
 
         }
@@ -849,9 +850,13 @@ void MainWindow::ask_keeplogs(QString str)
         else {
             QMessageBox::warning(this, tr("Warning"), tr("Can't create a file"));
         }
+        if(game_type!=Online)
+        reGame();
     });
     connect(btn2,&QPushButton::clicked,this,[=](){
         end->close();
+        if(game_type!=Online)
+        reGame();
     });
     QGridLayout *layout = new QGridLayout;
     layout->addWidget(endInformation, 0, 0);
