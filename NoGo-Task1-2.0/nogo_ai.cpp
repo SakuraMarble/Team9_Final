@@ -62,23 +62,28 @@ int ai::ai_calc(brd &board,int use,int size){
     }
 pii ai::thinking(brd &board,int use,int size){
     //程序的接口
-        const int enemy=1-use;
+    qDebug()<<"ai::thinking";        const int enemy=1-use;
         int worth[size][size];
+        memset(worth,0,sizeof(worth));
+        worth[1][1]=50;
+        worth[1][size-1]=51;
+        worth[size-1][1]=52;
+        worth[size-1][size-1]=53;
         for(int i=1;i<size;i++)
             for(int j=1;j<size;j++){
                 if(board[i][j]!=ai_empty)worth[i][j]=-1e7;
                 else{
                     if(i<=2||i>=size-2)worth[i][j]+=rand()%10;
                     if(j<=2||j>=size-2)worth[i][j]+=rand()%10;
-                    bool zs=(i-1>=0&&j-1>=0&&board[i-1][j-1]==use);
-                    bool ys=(i-1>=0&&j+1<size&&board[i-1][j+1]==use);
-                    bool zx=(i+1<size&&j-1>=0&&board[i+1][j-1]==use);
-                    bool yx=(i+1<size&&j+1<size&&board[i+1][j+1]==use);
+                    bool zs=(i>=0&&j-1>=0&&board[i][j-1]==use);
+                    bool ys=(i>=0&&j+1<size&&board[i][j+1]==use);
+                    bool zx=(i+1<size&&j>=0&&board[i+1][j]==use);
+                    bool yx=(i-1>=0&&j<size&&board[i-1][j]==use);
                     int summ=(int)zs+(int)ys+(int)zx+(int)yx;
-                    worth[i][j]+=summ*20;
+                    worth[i][j]-=summ*20;
                     board[i][j]=use;
                     if(ai_check(board,size)){
-                        worth[i][j]=ai_calc(board,use,size);
+                        worth[i][j]+=ai_calc(board,use,size);
                     }
                     else worth[i][j]=-1e6;
                     board[i][j]=ai_empty;
