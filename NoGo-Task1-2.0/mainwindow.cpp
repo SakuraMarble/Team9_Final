@@ -631,10 +631,6 @@ void MainWindow::on_pushButton_Surrender_clicked()
         }
     }
         ask_keeplogs(str);//询问是否保存对局记录
-        if (game_type != View && game_type!=Online)
-            reGame();
-
-
 }
 
 void MainWindow::timer_init()
@@ -727,9 +723,6 @@ void MainWindow::timelimit_exceeded()
         str = "The black"; //白色TL黑色win！
 
     ask_keeplogs(str);//询问是否保存对局记录
-        if(game_type!=Online)
-        reGame();
-
 }
 
 /*void MainWindow::buttonClicked(QAbstractButton *butClicked){//选择是否为对阵AI模式
@@ -844,14 +837,17 @@ void MainWindow::ask_keeplogs(QString str)
             out << BOARD_GRAD_SIZE << endl;
             out.close();
 
-            QMessageBox::information(this, tr("Done!"), tr("Your logs have been saved!"));
+            int ret = QMessageBox::information(this, tr("Done!"), tr("Your logs have been saved!"));
+            if(ret == QMessageBox::Ok)
+            {
+                end->close();
+                reGame();
+            }
         }
 
         else {
             QMessageBox::warning(this, tr("Warning"), tr("Can't create a file"));
         }
-        if(game_type!=Online)
-        reGame();
     });
     connect(btn2,&QPushButton::clicked,this,[=](){
         end->close();
