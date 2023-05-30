@@ -67,17 +67,17 @@ pii ai::thinking(brd &board,int use,int size){
     //程序的接口
     qDebug()<<"ai::thinking";        const int enemy=1-use;
         int worth[size][size];
-        int pre_worth[size][size];
+        int pre_worth;
         memset(worth,0,sizeof(worth));
         worth[1][1]=50;
         worth[1][size-1]=51;
         worth[size-1][1]=52;
         worth[size-1][size-1]=53;
+        pre_worth=ai_calc(0,0,board,use,size)+ai_calc(0,0,board,enemy,size);
         for(int i=1;i<size;i++)
             for(int j=1;j<size;j++){
                 if(board[i][j]!=ai_empty)worth[i][j]=-1e7;
                 else{
-                    pre_worth[i][j]=ai_calc(i,j,board,use,size)+ai_calc(i,j,board,enemy,size);
                     if(i<=2||i>=size-2)worth[i][j]+=1;
                     if(j<=2||j>=size-2)worth[i][j]+=1;
                     bool zs=(i>=0&&j-1>=0&&board[i][j-1]==use);
@@ -105,7 +105,7 @@ pii ai::thinking(brd &board,int use,int size){
                         worth[i][j]+=ai_calc(i,j,board,enemy,size);
                     }
                     board[i][j]=ai_empty;
-                    worth[i][j]-=pre_worth[i][j];
+                    worth[i][j]-=pre_worth;
 
                 }
             }
