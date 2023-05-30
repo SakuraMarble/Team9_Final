@@ -64,7 +64,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
     QString folder_path = documents_path + "/Nogo Running Logs";
     // create folder if it does not exist
     QDir().mkpath(folder_path);
-    QFile file(folder_path + "/" + QDateTime::currentDateTime().toString("yyyy-MM-dd") + "-log.txt");
+    QFile file(folder_path + "/" + QDateTime::currentDateTime().toString("yyyy-MM-dd_hh") + "-log.txt");
     file.open(QIODevice::WriteOnly | QIODevice::Append);
     QTextStream text_stream(&file);
     text_stream << txt << "\r\n";
