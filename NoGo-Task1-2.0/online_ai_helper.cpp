@@ -1,6 +1,6 @@
 #include"online_ai_helper.h"
 #include<qdebug.h>
-
+#include<QThread>
 Online_Ai_Helper::~Online_Ai_Helper() {
     qDebug() << "Deconstructor\n";
 }
@@ -121,6 +121,7 @@ bool Online_Ai_Helper::ai_try(brd &board,int x,int y,int col,int size){//判断�
 }
 
 void Online_Ai_Helper::run() {
+    QThread::msleep(300);
     cal_res = this->thinking(board, use, size);
     // 发送结果
     emit finished(cal_res);

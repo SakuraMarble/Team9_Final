@@ -446,6 +446,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent * event)
 void MainWindow::chessOneByPerson()
 {
     repaint();
+
     if (game_type == View) {
         if (Logs[game->playerFlag].empty()) {//认输编码'G'不会读入，等效无子
             QString str;
