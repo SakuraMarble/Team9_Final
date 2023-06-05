@@ -125,14 +125,14 @@ pii ai::thinking(brd &board,int use,int size){
                     x=i;
                     y=j;
                 }
-        QDebug deb = qDebug();
+        /*QDebug deb = qDebug();
         for(int i=1;i<size;i++){
             for(int j=1;j<size;j++)
                 deb<<real_worth[i][j]<<" ";deb<<'\n';}deb<<'\n';
             for(int i=1;i<size;i++){
                 for(int j=1;j<size;j++)
                     deb<<worth[i][j]<<" ";deb<<'\n';
-        }
+        }*/
         return make_pair(x,y);
     }
 int ai::get_possi(brd &board,int use,int size){//判断优势

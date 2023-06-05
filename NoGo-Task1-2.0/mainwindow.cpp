@@ -1197,7 +1197,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
     if(data.op == OPCODE::READY_OP && online_WhetherHavePlayed == false)
     {
         //initGameMode(game_type);
-        qDebug() << QDateTime::currentMSecsSinceEpoch() << "(first)Client receives READY_OP from server" + opp_ip << '\n';
+        qDebug() << QDateTime::currentMSecsSinceEpoch() << "(first)Client receives READY_OP from server " + opp_ip << '\n';
         online_WhetherHavePlayed = true;
         initGameMode(Online);
         timer_init();
@@ -1251,7 +1251,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
     }
 
     if (data.op == OPCODE::MOVE_OP) {
-        qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Client receives MOVE_OP from server" + opp_ip << data.data1 << '\n';
+        qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Client receives MOVE_OP from server " + opp_ip << data.data1 << '\n';
         pair<int,int> move = index_decode(data.data1);
         clickPosRow = move.first;
         clickPosCol = move.second;
@@ -1352,7 +1352,7 @@ void MainWindow::receive_fromServer(NetworkData data)//主动连接时 处理从
     }
     if (data.op == OPCODE::CHAT_OP) {
         QMessageBox::information (this, "Said to you", data.data1);
-        qDebug() << QDateTime::currentMSecsSinceEpoch() << "Client receives CHAT_OP from server" + opp_ip << '\n';
+        qDebug() << QDateTime::currentMSecsSinceEpoch() << "Client receives CHAT_OP from server " + opp_ip << '\n';
     }
     if(data.op == OPCODE::REJECT_OP) {
         qDebug() << "Client receives REJECT_OP\n";
@@ -1389,7 +1389,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
     opponent = client;
     if(data.op == OPCODE::READY_OP && online_WhetherHavePlayed == false) //第一次发起对战时候的情况
     {
-        qDebug() << QDateTime::currentMSecsSinceEpoch() << "(first game)Server receives READY_OP" + opp_ip << '\n';
+        qDebug() << QDateTime::currentMSecsSinceEpoch() << "(first game)Server receives READY_OP " + opp_ip << '\n';
         if (game->gameStatus != PLAYING) {
             QString opp_hold;
             //last = client;
@@ -1417,7 +1417,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
 
                 NetworkData ready(OPCODE::READY_OP,UserName,"");
                 server->send(opponent,ready);
-                qDebug() << QDateTime::currentMSecsSinceEpoch() << "(first game)Server sends ready " + opp_ip << ready.data1 << '\n';
+                qDebug() << QDateTime::currentMSecsSinceEpoch() << " (first game)Server sends ready " + opp_ip << ready.data1 << '\n';
                 initGameMode(game_type);
                 timer_init();
                 timer->stop();
@@ -1434,14 +1434,14 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
         }
     }
     else if(data.op == OPCODE::READY_OP && isWaiting == true && online_WhetherHavePlayed == true){
-        qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server receives READY_OP from client" + opp_ip << '\n';
+        qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server receives READY_OP from client " + opp_ip << '\n';
         initGameMode(Online);
         timer_init();
         timer->stop();
         isWaiting = false;
     }
     else if (data.op == OPCODE::READY_OP && isWaiting == false && online_WhetherHavePlayed == true) {
-        qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server receives READY_OP" + opp_ip << '\n';
+        qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server receives READY_OP " + opp_ip << '\n';
         QString opp_hold;
         //last = client;
         if (data.data2 == "b") {
@@ -1468,7 +1468,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
 
             NetworkData ready(OPCODE::READY_OP,UserName,"");
             server->send(opponent,ready);
-            qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server sends ready again " + opp_ip<<"This is playing again" << ready.data1 << '\n';
+            qDebug() << QDateTime::currentMSecsSinceEpoch() << "Server sends ready again " + opp_ip<<" This is playing again " << ready.data1 << '\n';
             initGameMode(game_type);
             timer_init();
             timer->stop();
@@ -1483,7 +1483,7 @@ void MainWindow::receiveData(QTcpSocket* client, NetworkData data)
 
     }
     if (data.op == OPCODE::MOVE_OP) {
-        qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << "Server receives MOVE_OP" << data.data1 << '\n';
+        qDebug() << QDateTime::currentMSecsSinceEpoch() << game->totalSteps << " Server receives MOVE_OP " << data.data1 << '\n';
         qDebug() <<"Server 's isWaiting:" <<isWaiting<<'\n';
         qDebug() <<"Server 's online_WhetherHavePlayed:"<<online_WhetherHavePlayed<<'\n';
         //server->send(socket->base(),data);
