@@ -57,7 +57,7 @@ int ai::ai_calc(int xxx,int yyy,brd &board,int use,int size){
                         val-=100;
 
                     }
-                    else disbld[xxx][yyy].push_back(i*size+j);
+                    else {/*cout << xxx << yyy << endl;*/disbld[xxx][yyy].emplace_back(i*size+j);}
                     board[i][j]=ai_empty;
                 }
             }

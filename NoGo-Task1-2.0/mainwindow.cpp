@@ -310,8 +310,11 @@ void MainWindow::initGameMode(GameType type)
     game->startGame(type);
     update();
 
-    if (game_type == View && !logs_empty)
+    if (game_type == View && !logs_empty) {
         QMessageBox::information (this, "Tips", "点击任意落子处复现下一步");
+        game->gameStatus = PLAYING;
+    }
+
 }
 
 void MainWindow::mouseMoveEvent(QMouseEvent *event)
@@ -474,7 +477,10 @@ void MainWindow::chessOneByPerson()
             //else {
             clickPosRow = now_move.first - 'A' + 1;
             clickPosCol = now_move.second;
-
+            cout << clickPosRow << ' ' << clickPosCol << endl;
+            cout << view_lose << ' ' << game->gameStatus << endl;
+            if (game->gameStatus == PLAYING)
+                cout << "playing" << endl;
             //}
         }
     }
