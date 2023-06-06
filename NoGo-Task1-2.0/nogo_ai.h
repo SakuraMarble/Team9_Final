@@ -26,6 +26,13 @@ protected:
     void ai_merge(int sour,int dest);
     int ai_calc(int xxx,int yyy,brd &board,int use,int size);
 public:
+    /*ai() {
+        for(int i = 0; i < 20; i++) {
+            for(int j = 0; j < 20; j++) {
+                disbld[i][j] = vector<int>(); // 空vector
+            }
+        }
+    }*/
     bool ai_check(brd &board,int size);
     pii thinking(brd &board,int use,int size);
     int get_possi(brd&board,int use,int size);
