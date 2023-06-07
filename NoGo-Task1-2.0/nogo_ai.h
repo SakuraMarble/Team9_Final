@@ -21,10 +21,10 @@ class ai{
 protected:
     int ai_fa[10000];//并查集
     int air[10000];
-    vector<int>disbld[20][20];//禁用
+    //vector<int>disbld[20][20];//禁用
     int findai_fa(int i);
     void ai_merge(int sour,int dest);
-    int ai_calc(int xxx,int yyy,brd &board,int use,int size);
+    int ai_calc(brd &board,int use,int size);
 public:
     /*ai() {
         for(int i = 0; i < 20; i++) {
