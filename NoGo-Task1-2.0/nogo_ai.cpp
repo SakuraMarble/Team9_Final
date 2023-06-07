@@ -73,25 +73,40 @@ pii ai::thinking(brd &board,int use,int size){
         worth[1][size-1]=51;
         worth[size-1][1]=52;
         worth[size-1][size-1]=53;
+        int abl=0;
+        for(int i=1;i<size;i++)
+            for(int j=1;j<size;j++){
+                if(board[i][j]==ai_empty){
+                    board[i][j]=use;
+                    if(ai_check(board,size)){
+                        abl+=1;
+                    }
+                    board[i][j]=ai_empty;}}
         //pre_worth=ai_calc(0,0,board,use,size)+ai_calc(0,0,board,enemy,size);
         for(int i=1;i<size;i++)
             for(int j=1;j<size;j++){
+                bool flgemp=false;
+                if(worth[i][j]==0){flgemp=true;
+                    for(int ii=i-1;ii<=i+1&&ii<size;ii++)
+                        for(int jj=j-1;jj<=j+1&&jj<size;jj++)
+                            if(board[ii][jj]!=ai_empty)flgemp=false;
+
+                }
+                if(flgemp==true)worth[i][j]=-1000;else{
                 if(board[i][j]!=ai_empty)worth[i][j]=-1e7;
                 else{
-                    if(i<=2||i>=size-2)worth[i][j]+=1;
-                    if(j<=2||j>=size-2)worth[i][j]+=1;
-                    bool zs=(i>=0&&j-1>=0&&board[i][j-1]==use);
-                    bool ys=(i>=0&&j+1<size&&board[i][j+1]==use);
-                    bool zx=(i+1<size&&j>=0&&board[i+1][j]==use);
-                    bool yx=(i-1>=0&&j<size&&board[i-1][j]==use);
+                    bool zs=(i-1>=0&&j-1>=0&&board[i-1][j-1]==use);
+                    bool ys=(i-1>=0&&j+1<size&&board[i-1][j+1]==use);
+                    bool zx=(i+1<size&&j-1>=0&&board[i+1][j-1]==use);
+                    bool yx=(i+1<size&&j+1<size&&board[i+1][j+1]==use);
                     int summ=(int)zs+(int)ys+(int)zx+(int)yx;
-                    worth[i][j]-=summ*1;
+                    worth[i][j]-=summ*5;
                     zs=(i>=0&&j-1>=0&&board[i][j-1]==enemy);
-                    ys=(i>=0&&j+1<size&&board[i][j+1]==enemy);
+                    ys=(i<size&&j+1<size&&board[i][j+1]==enemy);
                     zx=(i+1<size&&j>=0&&board[i+1][j]==enemy);
                     yx=(i-1>=0&&j<size&&board[i-1][j]==enemy);
                     summ=(int)zs+(int)ys+(int)zx+(int)yx;
-                    worth[i][j]+=summ*1;
+                    worth[i][j]+=summ*6;
                     board[i][j]=use;
                     if(ai_check(board,size)){
                         int min_enemy=1e8;
@@ -116,7 +131,7 @@ pii ai::thinking(brd &board,int use,int size){
 
                     //worth[i][j]-=pre_worth;
 
-                }
+                }}
             }
         //int real_worth[size][size];
         //for(int i=1;i<size;i++)
@@ -134,14 +149,11 @@ pii ai::thinking(brd &board,int use,int size){
                     x=i;
                     y=j;
                 }
-        /*QDebug deb = qDebug();
+        QDebug deb = qDebug();deb<<'\n';
         for(int i=1;i<size;i++){
             for(int j=1;j<size;j++)
-                deb<<real_worth[i][j]<<" ";deb<<'\n';}deb<<'\n';
-            for(int i=1;i<size;i++){
-                for(int j=1;j<size;j++)
-                    deb<<worth[i][j]<<" ";deb<<'\n';
-        }*/
+                deb<<worth[i][j]<<" ";deb<<'\n';}
+
 
         return make_pair(x,y);
     }
